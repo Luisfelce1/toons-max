@@ -1,0 +1,21 @@
+{
+  "name": "retrotoons",
+  "private": true,
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "setup": "npm install --prefix api && npm install --prefix web",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "migrate": "npm run migrate --prefix api",
+    "seed": "npm run seed --prefix api",
+    "ingesta": "npm run ingesta --prefix api",
+    "build": "npm run build --prefix web",
+    "start": "npm start --prefix api",
+    "dev": "npm run dev --prefix api & npm run dev --prefix web",
+    "test": "npm test --prefix api && npm test --prefix web",
+    "test:watch": "npm run test:watch --prefix api"
+  }
+}

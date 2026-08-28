@@ -1,0 +1,39 @@
+services:
+  db-dev:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: retrotoons
+      MARIADB_DATABASE: retrotoons_dev
+      MARIADB_USER: retrotoons
+      MARIADB_PASSWORD: retrotoons
+    ports:
+      - "3306:3306"
+    volumes:
+      - retrotoons-db-dev:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  db-test:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: retrotoons
+      MARIADB_DATABASE: retrotoons_test
+      MARIADB_USER: retrotoons
+      MARIADB_PASSWORD: retrotoons
+    ports:
+      - "3307:3306"
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  retrotoons-db-dev:
