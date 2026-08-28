@@ -29,7 +29,7 @@ export const SERIES_DEMO = [
     titulo: 'Coraje el Perro Cobarde', anio: 1999, canal: 'cartoon-network', tipo: 'tv',
     sinopsis: 'Un perro rosado protege a sus dueños de fuerzas sobrenaturales en el rancho Nada Mas.',
     episodios: [
-      { temporada: 1, numero: 1, titulo: 'El pantano de los espíritus', duracion: 22, resumen: 'Coraje se enfrenta a un espiritu del pantano.', youtube_id: 'dQw4w9WgXcQ' },
+      { temporada: 1, numero: 1, titulo: 'El pantano de los espíritus', duracion: 22, resumen: 'Coraje se enfrenta a un espiritu del pantano.', youtube_id: 'aqz-KE-bpKQ' },
       { temporada: 1, numero: 2, titulo: 'El regreso del perro fantasma', duracion: 22, resumen: 'Un antiguo perro maldito regresa al rancho.' },
     ],
   },
@@ -46,7 +46,7 @@ export const SERIES_DEMO = [
     titulo: 'Hey Arnold!', anio: 1996, canal: 'nickelodeon', tipo: 'tv',
     sinopsis: 'Un chico con cabeza de balon crece en una gran ciudad junto a su abuelo.',
     episodios: [
-      { temporada: 1, numero: 1, titulo: 'Arnold vuela una cometa', duracion: 22, resumen: 'Arnold intenta ganar el concurso de cometas.', youtube_id: 'jNQXAC9IVRw' },
+      { temporada: 1, numero: 1, titulo: 'Arnold vuela una cometa', duracion: 22, resumen: 'Arnold intenta ganar el concurso de cometas.', youtube_id: 'aqz-KE-bpKQ' },
       { temporada: 1, numero: 2, titulo: 'El secreto de Helga', duracion: 22, resumen: 'Helga esconde su verdadero sentir.' },
     ],
   },
@@ -62,7 +62,7 @@ export const SERIES_DEMO = [
     titulo: 'Los Jóvenes Titanes', anio: 2003, canal: 'warner-channel', tipo: 'tv',
     sinopsis: 'Cinco jovenes heroes protegen la ciudad mientras conviven como amigos.',
     episodios: [
-      { temporada: 1, numero: 1, titulo: 'Nace un equipo', duracion: 22, resumen: 'Los titanes se conocen por primera vez.', youtube_id: 'M7lc1UVf-VE' },
+      { temporada: 1, numero: 1, titulo: 'Nace un equipo', duracion: 22, resumen: 'Los titanes se conocen por primera vez.', youtube_id: 'aqz-KE-bpKQ' },
       { temporada: 1, numero: 2, titulo: 'El plan de Slade', duracion: 22, resumen: 'Un enemigo misterioso observa al equipo.' },
     ],
   },

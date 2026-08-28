@@ -1,0 +1,55 @@
+@if (cargando()) {
+  <p class="text-crt-muted">Cargando...</p>
+} @else if (error()) {
+  <p role="alert" class="text-marvel">{{ error() }}</p>
+} @else if (episodio(); as ep) {
+  <div class="flex flex-col gap-4">
+    <a [routerLink]="['/serie', slug]" class="w-fit text-sm text-crt-muted hover:text-otros">&larr; Volver a la serie</a>
+
+    <h1 class="font-display text-lg text-crt-text">
+      {{ serie()?.titulo }} &middot; T{{ ep.temporada }}E{{ ep.numero }} {{ ep.titulo }}
+    </h1>
+
+    <div class="aspect-video w-full overflow-hidden rounded-xl bg-black">
+      @if (ep.youtube_id) {
+        <div #ytEl class="h-full w-full"></div>
+      } @else if (ep.video_url) {
+        <video
+          #videoEl
+          [src]="ep.video_url"
+          controls
+          playsinline
+          class="h-full w-full"
+          (ended)="onVideoEnded()"
+        ></video>
+      } @else {
+        <div class="flex h-full w-full items-center justify-center text-crt-muted">
+          Este episodio todavia no tiene video disponible.
+        </div>
+      }
+    </div>
+
+    @if (ep.resumen) {
+      <p class="text-crt-text">{{ ep.resumen }}</p>
+    }
+
+    <div class="flex items-center justify-between gap-4">
+      <button
+        type="button"
+        (click)="irAAnterior()"
+        [disabled]="!anterior"
+        class="rounded-lg border border-crt-line px-4 py-3 text-sm font-semibold text-crt-text disabled:opacity-40"
+      >
+        &larr; Anterior
+      </button>
+      <button
+        type="button"
+        (click)="irASiguiente()"
+        [disabled]="!siguiente"
+        class="rounded-lg bg-otros px-4 py-3 text-sm font-semibold text-crt-bg disabled:opacity-40"
+      >
+        Siguiente &rarr;
+      </button>
+    </div>
+  </div>
+}

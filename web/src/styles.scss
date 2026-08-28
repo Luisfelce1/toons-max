@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter/inter-variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Press Start 2P";
+  src: url("/fonts/press-start-2p/press-start-2p-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-display: "Press Start 2P", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+
+  --color-crt-bg: #0b0e14;
+  --color-crt-panel: #121826;
+  --color-crt-line: #1f2937;
+  --color-crt-text: #e6edf5;
+  --color-crt-muted: #93a2b8;
+
+  --color-cartoon-network: #ff6a00;
+  --color-nickelodeon: #f36c21;
+  --color-fox-kids: #0b6cf0;
+  --color-hanna-barbera: #ffd400;
+  --color-disney: #1c4bd6;
+  --color-warner-channel: #7b2ff7;
+  --color-marvel: #ed1d24;
+  --color-otros: #22d3ee;
+}
+
+/*
+ * Tailwind v4 solo emite las variables de @theme que detecta como usadas en
+ * clases literales; los colores por canal se aplican dinamicamente via
+ * [style.background]="'var(--color-' + canal.slug + ')'", asi que los
+ * redeclaramos aqui en CSS plano para que sobrevivan al tree-shaking.
+ */
+:root {
+  color-scheme: dark;
+
+  --color-cartoon-network: #ff6a00;
+  --color-nickelodeon: #f36c21;
+  --color-fox-kids: #0b6cf0;
+  --color-hanna-barbera: #ffd400;
+  --color-disney: #1c4bd6;
+  --color-warner-channel: #7b2ff7;
+  --color-marvel: #ed1d24;
+  --color-otros: #22d3ee;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  background-color: var(--color-crt-bg);
+  color: var(--color-crt-text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at top, rgba(255, 255, 255, 0.04), transparent 60%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.02) 0px,
+      rgba(255, 255, 255, 0.02) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-otros);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

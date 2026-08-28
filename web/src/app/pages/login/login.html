@@ -1,0 +1,33 @@
+<div class="mx-auto flex min-h-[70vh] max-w-sm flex-col justify-center gap-6">
+  <div class="text-center">
+    <h1 class="font-display text-2xl text-otros">RetroToons</h1>
+    <p class="mt-3 text-crt-muted">Introduce la clave familiar para entrar al catalogo.</p>
+  </div>
+
+  <form class="flex flex-col gap-4" (submit)="$event.preventDefault(); entrar()">
+    <label class="flex flex-col gap-2 text-left">
+      <span class="text-sm font-semibold text-crt-text">Clave familiar</span>
+      <input
+        type="password"
+        name="clave"
+        autocomplete="current-password"
+        [ngModel]="clave()"
+        (ngModelChange)="clave.set($event)"
+        class="rounded-lg border border-crt-line bg-crt-panel px-4 py-3 text-base text-crt-text"
+        placeholder="demo"
+      />
+    </label>
+
+    @if (error()) {
+      <p role="alert" class="text-sm font-semibold text-marvel">{{ error() }}</p>
+    }
+
+    <button
+      type="submit"
+      [disabled]="cargando()"
+      class="rounded-lg bg-otros px-4 py-3 text-base font-semibold text-crt-bg disabled:opacity-60"
+    >
+      {{ cargando() ? 'Entrando...' : 'Entrar' }}
+    </button>
+  </form>
+</div>

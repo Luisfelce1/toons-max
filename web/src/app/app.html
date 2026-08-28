@@ -1,0 +1,29 @@
+<div class="flex min-h-screen flex-col">
+  <header class="border-b border-crt-line/60 bg-crt-panel/60">
+    <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+      <a routerLink="/" class="font-display text-base text-otros sm:text-lg">RetroToons</a>
+      @if (familyKey()) {
+        <button
+          type="button"
+          (click)="cerrarSesion()"
+          class="rounded-lg border border-crt-line px-4 py-2 text-sm font-semibold text-crt-muted hover:text-crt-text"
+        >
+          Cerrar sesion
+        </button>
+      }
+    </div>
+  </header>
+
+  <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">
+    <router-outlet />
+  </main>
+
+  <footer class="border-t border-crt-line/60 px-4 py-6 text-center text-xs text-crt-muted sm:px-6">
+    <p>
+      RetroToons es un catalogo familiar sin fines comerciales. Metadata de series y episodios
+      cortesia de <a class="underline" href="https://www.tvmaze.com/api" target="_blank" rel="noopener">TVMaze</a>
+      y <a class="underline" href="https://jikan.moe/" target="_blank" rel="noopener">Jikan / MyAnimeList</a>.
+      No alojamos contenido con derechos de autor.
+    </p>
+  </footer>
+</div>

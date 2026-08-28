@@ -38,7 +38,7 @@ export function createApp(env = process.env) {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'"],
+          scriptSrc: ["'self'", 'https://www.youtube.com'],
           styleSrc: ["'self'"],
           imgSrc: ["'self'", 'data:', 'https://static.tvmaze.com', 'https://cdn.myanimelist.net'],
           fontSrc: ["'self'"],
