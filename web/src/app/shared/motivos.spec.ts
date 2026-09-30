@@ -17,6 +17,12 @@ describe('motivoPara', () => {
     ['Casper (clásicos)', 'fantasma'],
     ['Pocoyó', 'pelota'],
     ['Courage the Cowardly Dog', 'hueso'],
+    ['Peppa Pig', 'charco'],
+    ['Caillou (España)', 'cometa'],
+    ['Tres espías sin límite (Latino)', 'lupa'],
+    ['Código Lyoko', 'ordenador'],
+    ['Oggy y las cucarachas', 'bicho'],
+    ['Barbapapá', 'nube'],
   ])('%s -> %s', (titulo, esperado) => {
     expect(motivoPara(titulo)).toBe(esperado);
   });
