@@ -4,9 +4,11 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import mysql from 'mysql2/promise';
 
 /**
- * SSL para bases gestionadas (Aiven, etc.):
- * - DB_SSL_CA=./ca.pem          -> TLS verificando el certificado del proveedor (recomendado).
- * - DB_SSL=true o ?ssl-mode=REQUIRED en DATABASE_URL -> TLS con las CA publicas del sistema.
+ * SSL para bases gestionadas (Aiven, etc.), con la misma semantica que el cliente MySQL:
+ * - DB_SSL_CA=./ca.pem                    -> TLS verificando el certificado del proveedor (recomendado).
+ * - ?ssl-mode=VERIFY_CA / VERIFY_IDENTITY -> TLS verificando con las CA del sistema.
+ * - ?ssl-mode=REQUIRED o DB_SSL=true      -> TLS cifrado sin verificar el certificado
+ *   (Aiven usa su propia CA: sin ca.pem no se puede verificar, pero la conexion va cifrada).
  * Sin nada de lo anterior: conexion sin TLS (MariaDB local / docker).
  */
 export function parseSslConfig(env = process.env, { readFile = fs.readFileSync } = {}) {
@@ -14,9 +16,12 @@ export function parseSslConfig(env = process.env, { readFile = fs.readFileSync }
     const ruta = path.resolve(env.DB_SSL_CA);
     return { ca: readFile(ruta, 'utf8'), rejectUnauthorized: true };
   }
-  const sslMode = env.DATABASE_URL ? new URL(env.DATABASE_URL).searchParams.get('ssl-mode') : null;
-  const pideSsl = String(env.DB_SSL ?? '').toLowerCase() === 'true' || /^(required|verify_ca|verify_identity)$/i.test(sslMode ?? '');
-  return pideSsl ? { rejectUnauthorized: true } : undefined;
+  const sslMode = (env.DATABASE_URL ? new URL(env.DATABASE_URL).searchParams.get('ssl-mode') : '') ?? '';
+  if (/^(verify_ca|verify_identity)$/i.test(sslMode)) return { rejectUnauthorized: true };
+  if (/^required$/i.test(sslMode) || String(env.DB_SSL ?? '').toLowerCase() === 'true') {
+    return { rejectUnauthorized: false };
+  }
+  return undefined;
 }
 
 export function parseDbConfig(env = process.env, opciones = {}) {

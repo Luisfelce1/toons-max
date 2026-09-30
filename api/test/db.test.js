@@ -57,10 +57,21 @@ describe('SSL (Aiven y similares)', () => {
     expect(cfg.database).toBe('defaultdb');
   });
 
-  it('activa TLS con ?ssl-mode=REQUIRED aunque no haya CA', () => {
+  it('?ssl-mode=REQUIRED cifra sin verificar (como el cliente MySQL)', () => {
     const cfg = parseDbConfig({ DATABASE_URL: 'mysql://u:p@h:3306/db?ssl-mode=REQUIRED' });
-    expect(cfg.ssl).toEqual({ rejectUnauthorized: true });
+    expect(cfg.ssl).toEqual({ rejectUnauthorized: false });
     expect(cfg.database).toBe('db');
+  });
+
+  it('?ssl-mode=VERIFY_IDENTITY verifica con las CA del sistema', () => {
+    const cfg = parseDbConfig({ DATABASE_URL: 'mysql://u:p@h:3306/db?ssl-mode=VERIFY_IDENTITY' });
+    expect(cfg.ssl).toEqual({ rejectUnauthorized: true });
+  });
+
+  it('DB_SSL_CA tiene prioridad sobre ssl-mode', () => {
+    const readFile = vi.fn().mockReturnValue('CERT');
+    const cfg = parseDbConfig({ DATABASE_URL: 'mysql://u:p@h:3306/db?ssl-mode=REQUIRED', DB_SSL_CA: './ca.pem' }, { readFile });
+    expect(cfg.ssl).toEqual({ ca: 'CERT', rejectUnauthorized: true });
   });
 
   it('sin SSL para MariaDB local', () => {
