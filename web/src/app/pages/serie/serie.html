@@ -21,13 +21,12 @@
       class="flex flex-col items-center gap-6 rounded-3xl border-4 border-ink p-5 shadow-lg sm:flex-row sm:items-start sm:p-8"
       [style.background]="'var(--color-' + s.canal_slug + ')'"
     >
-      @if (s.poster) {
-        <img
-          [src]="s.poster"
-          [alt]="s.titulo"
-          class="w-48 shrink-0 -rotate-2 rounded-3xl border-4 border-ink object-cover shadow-md sm:w-64"
-        />
-      }
+      <app-portada
+        [titulo]="s.titulo"
+        [slug]="s.slug"
+        [canal]="s.canal_slug"
+        class="w-48 shrink-0 -rotate-2 overflow-hidden rounded-3xl border-4 border-ink shadow-md sm:w-64"
+      />
       <div class="flex w-full flex-col items-center gap-4 rounded-3xl border-4 border-ink bg-paper p-5 text-center sm:items-start sm:text-left">
         <ui-badge class="border-[3px] border-ink bg-surface px-3 py-1 text-sm text-ink">{{ s.canal_nombre }}</ui-badge>
         <h1 class="font-display text-lg sm:text-2xl">{{ s.titulo }}</h1>

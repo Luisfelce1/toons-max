@@ -114,7 +114,8 @@ export class ReproductorPage implements OnDestroy {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: episodio.titulo ?? `Episodio ${episodio.numero}`,
       artist: this.serie()?.titulo ?? 'RetroToons',
-      artwork: this.serie()?.poster ? [{ src: this.serie()!.poster!, sizes: '512x512', type: 'image/png' }] : [],
+      // Portada propia de la app: nunca imagenes externas con copyright.
+      artwork: [{ src: '/icon-512.png', sizes: '512x512', type: 'image/png' }],
     });
 
     navigator.mediaSession.setActionHandler('nexttrack', () => this.irASiguiente());

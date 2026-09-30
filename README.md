@@ -68,15 +68,35 @@ igual.
 ## Ingesta real de datos (opcional, necesita internet)
 
 ```bash
-npm run ingesta
+npm run ingesta            # series + temporadas + episodios completos (TVMaze / Jikan)
+npm run ingesta:videos     # videos, solo de canales OFICIALES de YouTube (necesita YOUTUBE_API_KEY)
 ```
 
-Puebla la base con series reales desde TVMaze (caricaturas, sin API key) y Jikan (anime, sin
-API key), respetando los limites de peticion de cada API (espera entre paginas de episodios de
-Jikan). Es **idempotente**: correrla varias veces actualiza en vez de duplicar
-(`INSERT ... ON DUPLICATE KEY UPDATE` por `slug` y por `(serie_id, temporada, numero)`). Los
-campos de video quedan vacios: hay que rellenarlos a mano, verificando que la fuente sea
-legal (dominio publico o embed oficial de YouTube).
+`npm run ingesta` puebla la base con el catalogo de `api/src/ingesta.js` (≈30 series de los 90:
+Power Rangers, Franklin, Oso en la casa azul, Rocket Power, El autobus magico, El recreo, El mundo
+de Bobby, Rugrats, Doug, Animaniacs, X-Men...). Cada serie se identifica por su id de TVMaze o por
+nombre + año de estreno, y se pueden limitar temporadas (Power Rangers: solo Mighty Morphin, T1-T3).
+Es **idempotente** y **nunca borra** videos ya asignados.
+
+**Portadas**: no se guardan pósters externos. El frontend genera una portada original por serie
+(`web/src/app/shared/portada.ts`: tele de los 90 + iniciales + color del canal + patron segun el
+slug). Sin imagenes de terceros, sin marcas de agua ni copyright ajeno.
+
+**Videos**: `npm run ingesta:videos` recorre las subidas del canal oficial declarado en `oficial`
+y empareja por `SxxEyy` o por titulo exacto del episodio (si es ambiguo, no asigna). Descarta
+clips, trailers y recopilaciones, y verifica que el propietario del video sea ese canal.
+
+| Serie | Fuente oficial de episodios completos |
+|---|---|
+| Mighty Morphin Power Rangers | YouTube `@PowerRangersOfficial` |
+| Franklin | YouTube `officialfranklin` |
+| El autobus magico | YouTube `@TheMagicSchoolBusOfficial` |
+| Rocket Power | Solo Paramount+ (sin canal oficial en YouTube) |
+| El recreo, Oso en la casa azul | Solo Disney+ |
+| El mundo de Bobby | Sin fuente oficial verificada |
+
+Las series sin fuente oficial quedan con su lista de episodios completa pero sin video (se
+muestran con candado). Puedes rellenar `youtube_id` a mano si encuentras un embed **oficial**.
 
 ## Estructura
 

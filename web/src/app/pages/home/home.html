@@ -118,13 +118,7 @@
               [style.rotate]="(i % 3 === 0 ? -1.5 : i % 3 === 1 ? 1 : 0) + 'deg'"
             >
               <div class="relative aspect-[2/3] w-full bg-muted">
-                @if (serie.poster) {
-                  <img [src]="serie.poster" alt="" class="size-full object-cover" loading="lazy" />
-                } @else {
-                  <div class="flex size-full items-center justify-center text-muted-foreground">
-                    <app-icon name="tv" [size]="56" />
-                  </div>
-                }
+                <app-portada [titulo]="serie.titulo" [slug]="serie.slug" [canal]="serie.canal_slug" class="size-full" />
                 <span
                   class="absolute right-2 top-2 flex size-14 items-center justify-center rounded-full border-4 border-ink bg-sunny text-ink opacity-90 shadow-sm transition-transform group-hover:scale-110"
                   aria-hidden="true"

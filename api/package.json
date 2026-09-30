@@ -13,7 +13,8 @@
     "seed": "node src/seed.js",
     "ingesta": "node src/ingesta.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "ingesta:videos": "node src/ingesta-videos.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

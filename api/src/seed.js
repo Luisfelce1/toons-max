@@ -13,17 +13,6 @@ export const CANALES = [
   { slug: 'otros', nombre: 'Otros' },
 ];
 
-const PLACEHOLDER_COLORS = ['#f97316', '#22d3ee', '#a3e635', '#f472b6', '#facc15', '#818cf8'];
-
-function placeholderPoster(titulo, index) {
-  const color = PLACEHOLDER_COLORS[index % PLACEHOLDER_COLORS.length];
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="450">
-    <rect width="300" height="450" fill="${color}"/>
-    <text x="150" y="225" font-family="sans-serif" font-size="22" fill="#1a1a1a" text-anchor="middle" dominant-baseline="middle">${titulo}</text>
-  </svg>`;
-  return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
-}
-
 export const SERIES_DEMO = [
   {
     titulo: 'Coraje el Perro Cobarde', anio: 1999, canal: 'cartoon-network', tipo: 'tv',
@@ -81,7 +70,6 @@ export async function seed() {
     await repo.upsertCanal(canal);
   }
 
-  let posterIndex = 0;
   for (const item of SERIES_DEMO) {
     const canal = await repo.getCanalBySlug(item.canal);
     const serieId = await repo.upsertSerie({
@@ -89,12 +77,12 @@ export async function seed() {
       titulo: item.titulo,
       anio: item.anio,
       sinopsis: item.sinopsis,
-      poster: placeholderPoster(item.titulo, posterIndex),
+      // Portada generada en el frontend: sin imagenes externas ni con copyright.
+      poster: null,
       tipo: item.tipo,
       fuente: 'demo',
       canal_id: canal.id,
     });
-    posterIndex += 1;
 
     for (const episodio of item.episodios) {
       await repo.upsertEpisodio({ ...episodio, serie_id: serieId });

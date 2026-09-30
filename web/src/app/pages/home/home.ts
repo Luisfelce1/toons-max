@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { ApiService } from '../../api.service';
 import type { Canal, SerieResumen } from '../../models';
 import { IconComponent } from '../../shared/icon';
+import { PortadaComponent } from '../../shared/portada';
 import { UiNativeButton } from '../../ui/button';
 import { UiCard } from '../../ui/card';
 import { UiBadge } from '../../ui/badge';
@@ -19,6 +20,7 @@ export const TODOS = 'todos';
   imports: [
     RouterLink,
     IconComponent,
+    PortadaComponent,
     UiNativeButton,
     UiCard,
     UiBadge,
