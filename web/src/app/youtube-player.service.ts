@@ -38,7 +38,7 @@ export class YoutubePlayerService {
     return new window.YT.Player(element, {
       videoId,
       host: 'https://www.youtube-nocookie.com',
-      playerVars: { rel: 0 },
+      playerVars: { rel: 0, autoplay: 1, playsinline: 1 },
       events: {
         onStateChange: (event: { data: number }) => {
           if (event.data === ENDED_STATE) {
