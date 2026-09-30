@@ -3,6 +3,10 @@ import * as repo from '../repo.js';
 import { keyMatches } from '../auth.js';
 import { loginBodySchema, seriesQuerySchema, slugParamSchema, idParamSchema, validate } from '../validation.js';
 
+// La app solo muestra lo que se puede ver: series, episodios y canales sin video quedan ocultos
+// (siguen en la base; aparecen solos en cuanto la ingesta les encuentra un video legal).
+const VISIBLE = { soloConVideo: true };
+
 export function createApiRouter(env = process.env) {
   const router = Router();
 
@@ -22,7 +26,7 @@ export function createApiRouter(env = process.env) {
 
   router.get('/canales', async (req, res, next) => {
     try {
-      res.json(await repo.listCanales());
+      res.json(await repo.listCanales(VISIBLE));
     } catch (error) {
       next(error);
     }
@@ -30,7 +34,7 @@ export function createApiRouter(env = process.env) {
 
   router.get('/series', validate(seriesQuerySchema, 'query'), async (req, res, next) => {
     try {
-      res.json(await repo.listSeries(req.valid_query));
+      res.json(await repo.listSeries({ ...req.valid_query, ...VISIBLE }));
     } catch (error) {
       next(error);
     }
@@ -38,7 +42,7 @@ export function createApiRouter(env = process.env) {
 
   router.get('/series/:slug', validate(slugParamSchema, 'params'), async (req, res, next) => {
     try {
-      const serie = await repo.getSerieBySlug(req.valid_params.slug);
+      const serie = await repo.getSerieBySlug(req.valid_params.slug, VISIBLE);
       if (!serie) return res.status(404).json({ error: 'Serie no encontrada' });
       return res.json(serie);
     } catch (error) {
@@ -48,9 +52,9 @@ export function createApiRouter(env = process.env) {
 
   router.get('/series/:slug/episodios', validate(slugParamSchema, 'params'), async (req, res, next) => {
     try {
-      const serie = await repo.getSerieBySlug(req.valid_params.slug);
+      const serie = await repo.getSerieBySlug(req.valid_params.slug, VISIBLE);
       if (!serie) return res.status(404).json({ error: 'Serie no encontrada' });
-      return res.json(await repo.listEpisodiosBySerie(serie.id));
+      return res.json(await repo.listEpisodiosBySerie(serie.id, VISIBLE));
     } catch (error) {
       return next(error);
     }
@@ -58,7 +62,7 @@ export function createApiRouter(env = process.env) {
 
   router.get('/episodios/:id', validate(idParamSchema, 'params'), async (req, res, next) => {
     try {
-      const episodio = await repo.getEpisodioById(req.valid_params.id);
+      const episodio = await repo.getEpisodioById(req.valid_params.id, VISIBLE);
       if (!episodio) return res.status(404).json({ error: 'Episodio no encontrado' });
       return res.json(episodio);
     } catch (error) {
