@@ -97,8 +97,8 @@ describe('data routes', () => {
     });
 
     it('400s for a slug with invalid characters', async () => {
-      const res = await request(app).get('/api/series/../../etc-passwd%00').set(authHeader);
-      expect([400, 404]).toContain(res.status);
+      const res = await request(app).get('/api/series/Not_A-Valid!Slug').set(authHeader);
+      expect(res.status).toBe(400);
     });
   });
 

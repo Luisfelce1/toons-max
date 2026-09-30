@@ -118,7 +118,8 @@ export async function upsertEpisodio(episodio) {
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
      ON DUPLICATE KEY UPDATE
        titulo = VALUES(titulo), duracion = VALUES(duracion), resumen = VALUES(resumen),
-       video_url = VALUES(video_url), youtube_id = VALUES(youtube_id)`,
+       video_url = COALESCE(VALUES(video_url), video_url),
+       youtube_id = COALESCE(VALUES(youtube_id), youtube_id)`,
     [serieId, temporada, numero, titulo ?? null, duracion ?? null, resumen ?? null, videoUrl ?? null, youtubeId ?? null]
   );
   const [[row]] = await pool.execute(
@@ -126,6 +127,17 @@ export async function upsertEpisodio(episodio) {
     [serieId, temporada, numero]
   );
   return row.id;
+}
+
+/** Asigna un video a un episodio existente (usado por ingesta-videos). */
+export async function setEpisodioVideo(serieId, temporada, numero, { youtube_id: youtubeId }) {
+  assertValidVideoFields({ youtube_id: youtubeId });
+  const pool = getPool();
+  const [result] = await pool.execute(
+    'UPDATE episodio SET youtube_id = ? WHERE serie_id = ? AND temporada = ? AND numero = ?',
+    [youtubeId, serieId, temporada, numero]
+  );
+  return result.affectedRows > 0;
 }
 
 export async function listEpisodiosBySerie(serieId) {

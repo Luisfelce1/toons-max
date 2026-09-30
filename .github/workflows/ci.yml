@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: retrotoons_test
+          MARIADB_USER: retrotoons
+          MARIADB_PASSWORD: retrotoons
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      MYSQLHOST: 127.0.0.1
+      MYSQLPORT: 3306
+      MYSQLUSER: retrotoons
+      MYSQLPASSWORD: retrotoons
+      MYSQLDATABASE: retrotoons_test
+      FAMILY_KEY: demo
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            api/package-lock.json
+            web/package-lock.json
+
+      - name: Install API dependencies
+        working-directory: api
+        run: npm ci
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Wait for MariaDB
+        run: |
+          for i in $(seq 1 30); do
+            mysqladmin ping -h127.0.0.1 -P3306 -uretrotoons -pretrotoons --silent && break
+            sleep 2
+          done
+
+      - name: Apply database schema
+        working-directory: api
+        run: npm run migrate
+
+      - name: Run API tests
+        working-directory: api
+        run: npm test
+
+      - name: Run web tests
+        working-directory: web
+        run: npm test -- --watch=false
+
+      - name: Build web
+        working-directory: web
+        run: npm run build

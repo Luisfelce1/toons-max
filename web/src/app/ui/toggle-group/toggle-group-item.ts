@@ -1,0 +1,54 @@
+import {
+  booleanAttribute,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
+import {
+  injectToggleGroupState,
+  NgpToggleGroupItem,
+  provideToggleGroupItemState,
+} from 'ng-primitives/toggle-group';
+import { toggleGroupItemVariants, type ToggleGroupItemVariants } from './variants';
+import { cn } from '../utils';
+
+@Component({
+  selector: 'ui-toggle-group-item',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [provideToggleGroupItemState()],
+  imports: [NgpToggleGroupItem],
+  host: {
+    '[class]': 'hostClasses()',
+  },
+  template: `
+    <button
+      ngpToggleGroupItem
+      [ngpToggleGroupItemValue]="value()"
+      [ngpToggleGroupItemDisabled]="isDisabled()"
+      [class]="classes()"
+      type="button"
+    >
+      <ng-content />
+    </button>
+  `,
+})
+export class UiToggleGroupItem {
+  readonly class = input<string>('');
+
+  protected readonly hostClasses = computed(() => cn('inline-flex', this.class()));
+
+  private readonly toggleGroupState = injectToggleGroupState();
+
+  readonly value = input.required<string>();
+  readonly disabled = input<boolean, unknown>(false, { transform: booleanAttribute });
+  readonly variant = input<ToggleGroupItemVariants['variant']>('default');
+  readonly size = input<ToggleGroupItemVariants['size']>('md');
+  protected readonly isDisabled = computed(
+    () => this.disabled() || this.toggleGroupState().disabled()
+  );
+
+  protected readonly classes = computed(() =>
+    toggleGroupItemVariants({ variant: this.variant(), size: this.size() })
+  );
+}

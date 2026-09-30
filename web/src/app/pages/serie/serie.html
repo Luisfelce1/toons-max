@@ -1,0 +1,90 @@
+@if (cargando()) {
+  <div class="flex flex-col gap-6 sm:flex-row" aria-busy="true" aria-label="Cargando serie">
+    <ui-skeleton height="auto" class="aspect-[2/3] w-48 rounded-3xl sm:w-64" />
+    <div class="flex flex-1 flex-col gap-4">
+      <ui-skeleton height="2.5rem" width="70%" class="rounded-2xl" />
+      <ui-skeleton height="5rem" width="16rem" class="rounded-3xl" />
+    </div>
+  </div>
+} @else if (error()) {
+  <ui-alert variant="destructive" role="alert" class="rounded-3xl border-4 bg-surface p-6 text-lg">
+    <app-icon slot="icon" name="tv" [size]="40" />
+    <div class="flex flex-1 flex-col gap-3">
+      <ui-alert-title class="font-display text-sm">¡Uy! No encontramos esa serie</ui-alert-title>
+      <ui-alert-description>{{ error() }}</ui-alert-description>
+      <a uiButton size="lg" routerLink="/" class="w-fit press"><app-icon name="home" /> Volver al inicio</a>
+    </div>
+  </ui-alert>
+} @else if (serie(); as s) {
+  <article class="flex flex-col gap-10">
+    <div
+      class="flex flex-col items-center gap-6 rounded-3xl border-4 border-ink p-5 shadow-lg sm:flex-row sm:items-start sm:p-8"
+      [style.background]="'var(--color-' + s.canal_slug + ')'"
+    >
+      <app-portada
+        [titulo]="s.titulo"
+        [slug]="s.slug"
+        [canal]="s.canal_slug"
+        class="w-48 shrink-0 -rotate-2 overflow-hidden rounded-3xl border-4 border-ink shadow-md sm:w-64"
+      />
+      <div class="flex w-full flex-col items-center gap-4 rounded-3xl border-4 border-ink bg-paper p-5 text-center sm:items-start sm:text-left">
+        <ui-badge class="border-[3px] border-ink bg-surface px-3 py-1 text-sm text-ink">{{ s.canal_nombre }}</ui-badge>
+        <h1 class="font-display text-lg sm:text-2xl">{{ s.titulo }}</h1>
+
+        @if (primero(); as p) {
+          <a
+            uiButton
+            size="xl"
+            variant="success"
+            class="press"
+            [routerLink]="['/serie', s.slug, 'ver', p.id]"
+            aria-label="Ver el primer episodio"
+          >
+            <app-icon name="play" [filled]="true" /> ¡Ver!
+          </a>
+        }
+
+        @if (s.sinopsis) {
+          <p class="max-w-2xl text-base text-muted-foreground">{{ s.sinopsis }}</p>
+        }
+        <p class="text-sm font-semibold text-muted-foreground">
+          @if (s.anio) { {{ s.anio }} &middot; } {{ s.total_episodios }} episodios
+        </p>
+      </div>
+    </div>
+
+    @for (t of temporadas(); track t.numero) {
+      <section class="flex flex-col gap-4" [attr.aria-label]="'Temporada ' + t.numero">
+        <h2 class="font-display w-fit -rotate-1 rounded-2xl border-4 border-ink bg-sunny px-4 py-2 text-sm shadow-sm">
+          Temporada {{ t.numero }}
+        </h2>
+        <ul class="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8" role="list">
+          @for (ep of t.episodios; track ep.id) {
+            <li>
+              @if (tieneVideo(ep)) {
+                <a
+                  [routerLink]="['/serie', s.slug, 'ver', ep.id]"
+                  [attr.aria-label]="'Episodio ' + ep.numero + (ep.titulo ? ': ' + ep.titulo : '')"
+                  [title]="ep.titulo || ''"
+                  class="press flex aspect-square flex-col items-center justify-center gap-1 rounded-3xl border-4 border-ink bg-surface shadow transition-transform hover:-translate-y-1 hover:bg-sky focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <span class="font-display text-2xl">{{ ep.numero }}</span>
+                  <app-icon name="play" [size]="22" [filled]="true" class="text-bubble" />
+                </a>
+              } @else {
+                <div
+                  class="flex aspect-square flex-col items-center justify-center gap-1 rounded-3xl border-4 border-dashed border-ink/40 bg-muted text-muted-foreground"
+                  [attr.aria-label]="'Episodio ' + ep.numero + ', todavia sin video'"
+                  role="img"
+                >
+                  <span class="font-display text-2xl opacity-50">{{ ep.numero }}</span>
+                  <app-icon name="lock" [size]="20" />
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  </article>
+}

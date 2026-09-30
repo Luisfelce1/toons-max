@@ -6,11 +6,14 @@ import {
   mapJikanEpisodesPage,
   fetchJikanEpisodes,
   runIngesta,
+  elegirShowPorAnio,
+  slugSerie,
+  SERIES,
 } from '../src/ingesta.js';
 import { applyTestDbEnv } from './helpers/testDb.js';
 
 describe('mapTvMazeShow', () => {
-  it('maps a TVMaze show to serie fields with stripped summary', () => {
+  it('maps a TVMaze show to serie fields with stripped summary and never an external poster', () => {
     const show = {
       name: 'Courage the Cowardly Dog',
       premiered: '1999-11-12',
@@ -22,7 +25,7 @@ describe('mapTvMazeShow', () => {
       titulo: 'Courage the Cowardly Dog',
       anio: 1999,
       sinopsis: 'A dog protects his owners.',
-      poster: 'https://static.tvmaze.com/uploads/images/original_untouched/x/y.jpg',
+      poster: null,
       tipo: 'tv',
       fuente: 'tvmaze',
     });
@@ -53,8 +56,57 @@ describe('mapTvMazeEpisodes', () => {
     ]);
   });
 
+  it('filters by season and drops specials without number', () => {
+    const show = {
+      _embedded: {
+        episodes: [
+          { season: 1, number: 1, name: 'A', runtime: 22, summary: '' },
+          { season: 1, number: null, name: 'Special', runtime: 22, summary: '' },
+          { season: 4, number: 1, name: 'Zeo', runtime: 22, summary: '' },
+        ],
+      },
+    };
+    expect(mapTvMazeEpisodes(show, [1, 2, 3]).map((e) => e.titulo)).toEqual(['A']);
+  });
+
   it('returns an empty array when there are no embedded episodes', () => {
     expect(mapTvMazeEpisodes({})).toEqual([]);
+  });
+});
+
+describe('elegirShowPorAnio', () => {
+  const resultados = [
+    { show: { id: 1, name: 'Franklin', premiered: '2024-04-12' } },
+    { show: { id: 2, name: 'Franklin', premiered: '1997-11-03' } },
+  ];
+  it('picks the show whose premiere year matches', () => {
+    expect(elegirShowPorAnio(resultados, 1997)?.id).toBe(2);
+  });
+  it('returns null when no year matches', () => {
+    expect(elegirShowPorAnio(resultados, 1980)).toBeNull();
+  });
+  it('falls back to the first result without a year', () => {
+    expect(elegirShowPorAnio(resultados, undefined)?.id).toBe(1);
+  });
+});
+
+describe('SERIES catalog', () => {
+  it('has unique slugs and only official YouTube sources', () => {
+    const slugs = SERIES.map(slugSerie);
+    expect(new Set(slugs).size).toBe(slugs.length);
+    for (const s of SERIES.filter((x) => x.fuente === 'youtube')) {
+      expect(s.oficial, `${s.nombre} necesita canal oficial`).toBeTruthy();
+    }
+    for (const s of SERIES.filter((x) => x.fuente === 'archive')) {
+      expect(s.canal).toBe('clasicos');
+      for (const [, anio, id] of s.episodios) {
+        expect(anio).toBeGreaterThanOrEqual(1950);
+        expect(id).toMatch(/^[A-Za-z0-9._-]+$/);
+      }
+    }
+    for (const s of SERIES.filter((x) => x.oficial)) {
+      expect(s.oficial.handle || s.oficial.username || s.oficial.channelId).toBeTruthy();
+    }
   });
 });
 
@@ -72,7 +124,7 @@ describe('mapJikanAnime', () => {
       titulo: 'Dragon Ball',
       anio: 1986,
       sinopsis: 'A boy searches for magic orbs.',
-      poster: 'https://cdn.myanimelist.net/images/anime/x.jpg',
+      poster: null,
       tipo: 'anime',
       fuente: 'jikan',
       fuente_id: 21,
@@ -157,19 +209,22 @@ describe('runIngesta (idempotent, integration)', () => {
     await closePool();
   });
 
+  const show = {
+    id: 1,
+    name: 'Courage the Cowardly Dog',
+    premiered: '1999-11-12',
+    image: { original: 'https://static.tvmaze.com/x.jpg' },
+    summary: '<p>Resumen</p>',
+    _embedded: { episodes: [{ season: 1, number: 1, name: 'Ep 1', runtime: 22, summary: '<p>Uno</p>' }] },
+  };
+
   function buildFetchImpl() {
-    return vi.fn().mockResolvedValue({
-      json: async () => ({
-        name: 'Courage the Cowardly Dog',
-        premiered: '1999-11-12',
-        image: { original: 'https://static.tvmaze.com/x.jpg' },
-        summary: '<p>Resumen</p>',
-        _embedded: { episodes: [{ season: 1, number: 1, name: 'Ep 1', runtime: 22, summary: '<p>Uno</p>' }] },
-      }),
-    });
+    return vi.fn().mockImplementation(async (url) => ({
+      json: async () => (String(url).includes('/search/shows') ? [{ show }] : show),
+    }));
   }
 
-  const series = [{ nombre: 'Courage the Cowardly Dog', canal: 'cartoon-network', fuente: 'tvmaze' }];
+  const series = [{ nombre: 'Courage the Cowardly Dog', anio: 1999, canal: 'cartoon-network', fuente: 'tvmaze' }];
 
   it('does not duplicate series or episodes when run twice', async () => {
     const fetchImpl = buildFetchImpl();
@@ -180,5 +235,43 @@ describe('runIngesta (idempotent, integration)', () => {
     expect(total).toBe(1);
     const episodios = await repo.listEpisodiosBySerie(rows[0].id);
     expect(episodios).toHaveLength(1);
+  });
+
+  it('keeps a video filled by hand when ingesting again', async () => {
+    const fetchImpl = buildFetchImpl();
+    await runIngesta({ series, fetchImpl });
+    const { series: rows } = await repo.listSeries({});
+    await repo.setEpisodioVideo(rows[0].id, 1, 1, { youtube_id: 'aqz-KE-bpKQ' });
+
+    await runIngesta({ series, fetchImpl });
+
+    const [episodio] = await repo.listEpisodiosBySerie(rows[0].id);
+    expect(episodio.youtube_id).toBe('aqz-KE-bpKQ');
+    expect(rows[0].poster).toBeNull();
+  });
+
+  it('ingests public-domain shorts from Internet Archive with https video urls', async () => {
+    const fetchImpl = vi.fn().mockImplementation(async (url) => ({
+      ok: true,
+      json: async () => ({ files: [{ name: `${String(url).split('/').pop()}.mp4`, format: 'h.264', length: '400' }] }),
+    }));
+    const clasicos = [
+      {
+        nombre: 'Popeye clasicos', titulo: 'Popeye (clasicos)', anio: 1952, canal: 'clasicos', fuente: 'archive',
+        idioma: 'Ingles (original)', episodios: [['Spree Lunch', 1957, 'spree_lunch']],
+      },
+    ];
+    await runIngesta({ series: clasicos, fetchImpl });
+    await runIngesta({ series: clasicos, fetchImpl });
+
+    const { series: rows } = await repo.listSeries({ canal: 'clasicos' });
+    expect(rows).toHaveLength(1);
+    const episodios = await repo.listEpisodiosBySerie(rows[0].id);
+    expect(episodios).toHaveLength(1);
+    expect(episodios[0]).toMatchObject({
+      titulo: 'Spree Lunch (1957)',
+      duracion: 7,
+      video_url: 'https://archive.org/download/spree_lunch/spree_lunch.mp4',
+    });
   });
 });

@@ -1,0 +1,39 @@
+<div class="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center">
+  <ui-card class="rounded-[2.5rem] border-4 border-ink bg-tangerine p-4 shadow-lg">
+    <div class="rounded-[1.75rem] border-4 border-ink bg-paper p-6 text-center sm:p-8">
+      <app-icon name="tv" [size]="72" class="animate-bob text-grape" />
+      <h1 class="font-display mt-3 text-lg">¡Hola, familia!</h1>
+      <p class="mt-2 text-muted-foreground">Un adulto tiene que escribir la clave familiar para encender la tele.</p>
+
+      <form class="mt-6 flex flex-col gap-4 text-left" (submit)="$event.preventDefault(); entrar()">
+        <label class="flex flex-col gap-2">
+          <span class="text-sm font-bold">Clave familiar</span>
+          <ui-input
+            type="password"
+            size="xl"
+            name="clave"
+            autocomplete="current-password"
+            placeholder="demo"
+            [state]="error() ? 'error' : 'default'"
+            [value]="clave()"
+            (valueChange)="clave.set($event)"
+          />
+        </label>
+
+        @if (error()) {
+          <ui-alert variant="destructive" role="alert" class="rounded-2xl border-[3px] font-semibold">
+            <ui-alert-description>{{ error() }}</ui-alert-description>
+          </ui-alert>
+        }
+
+        <button uiButton type="submit" size="xl" variant="success" class="press" [disabled]="cargando()">
+          @if (cargando()) {
+            <ui-spinner size="md" /> Encendiendo...
+          } @else {
+            <app-icon name="play" [filled]="true" /> ¡Encender!
+          }
+        </button>
+      </form>
+    </div>
+  </ui-card>
+</div>
