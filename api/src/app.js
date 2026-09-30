@@ -6,8 +6,11 @@ import rateLimit from 'express-rate-limit';
 import { createApiRouter } from './routes/api.js';
 import { familyKeyMiddleware } from './auth.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const WEB_DIST = path.resolve(__dirname, '../../web/dist/web/browser');
+// Carpeta de la web compilada. Se calcula solo al servirla desde Node: en Workers
+// no existe import.meta.url y la web la sirve Cloudflare (assets).
+function webDist() {
+  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../web/dist/web/browser');
+}
 
 function corsMiddleware(env) {
   const allowedOrigin = env.NODE_ENV === 'production' ? env.CORS_ORIGIN : 'http://localhost:4200';
@@ -26,7 +29,12 @@ function corsMiddleware(env) {
   };
 }
 
-export function createApp(env = process.env) {
+/**
+ * @param env variables de entorno
+ * @param opciones.servirWeb  sirve la app Angular compilada (en Workers la sirve `assets`)
+ * @param opciones.middlewares middlewares extra antes de las rutas (p. ej. Hyperdrive en Workers)
+ */
+export function createApp(env = process.env, { servirWeb = true, middlewares = [] } = {}) {
   const app = express();
 
   app.set('trust proxy', 1);
@@ -69,6 +77,8 @@ export function createApp(env = process.env) {
     message: { ok: false, error: 'Demasiados intentos, intenta de nuevo mas tarde.' },
   });
 
+  for (const mw of middlewares) app.use(mw);
+
   app.use('/api', generalLimiter);
   app.use('/api/login', loginLimiter);
 
@@ -82,12 +92,15 @@ export function createApp(env = process.env) {
     apiRouter
   );
 
-  app.use(express.static(WEB_DIST));
-  app.get(/^(?!\/api).*/, (req, res, next) => {
-    res.sendFile(path.join(WEB_DIST, 'index.html'), (err) => {
-      if (err) next();
+  if (servirWeb) {
+    const WEB_DIST = webDist();
+    app.use(express.static(WEB_DIST));
+    app.get(/^(?!\/api).*/, (req, res, next) => {
+      res.sendFile(path.join(WEB_DIST, 'index.html'), (err) => {
+        if (err) next();
+      });
     });
-  });
+  }
 
   app.use('/api', (req, res) => {
     res.status(404).json({ error: 'Recurso no encontrado' });

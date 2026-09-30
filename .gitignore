@@ -9,3 +9,7 @@ web/dist/
 
 # Secretos locales (certificados de la base de datos)
 *.pem
+
+# Cloudflare (secretos locales y cache de wrangler)
+.dev.vars
+.wrangler/
