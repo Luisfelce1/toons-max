@@ -1,57 +1,149 @@
-<section class="flex flex-col gap-6">
-  <div class="rounded-2xl border border-crt-line bg-crt-panel px-6 py-8 text-center">
-    <h1 class="font-display text-xl text-otros sm:text-2xl">El catalogo familiar de caricaturas clasicas</h1>
-    <p class="mt-3 text-crt-muted">Organizado por canal original. Comparte la clave familiar y disfrutenlo entre varias casas.</p>
-  </div>
-
-  <div class="flex flex-wrap gap-2" role="group" aria-label="Filtrar por canal">
-    @for (canal of canales(); track canal.id) {
+<section class="flex flex-col gap-8">
+  <!-- Mando a distancia: un boton grande por canal -->
+  <div class="rounded-3xl border-4 border-ink bg-grape/90 p-4 shadow-lg sm:p-6">
+    <div class="mb-4 flex items-center justify-between gap-3">
+      <h1 class="text-sticker font-display text-base text-sunny sm:text-xl">¿Que vemos hoy?</h1>
       <button
+        uiButton
         type="button"
-        (click)="seleccionarCanal(canal.slug)"
-        [attr.aria-pressed]="canalActivo() === canal.slug"
-        class="rounded-full border px-4 py-2 text-sm font-semibold transition-colors"
-        [class.text-crt-bg]="canalActivo() === canal.slug"
-        [class.text-crt-text]="canalActivo() !== canal.slug"
-        [class.border-crt-line]="canalActivo() !== canal.slug"
-        [style.background]="canalActivo() === canal.slug ? ('var(--color-' + canal.slug + ')') : 'transparent'"
-        [style.borderColor]="'var(--color-' + canal.slug + ')'"
+        variant="secondary"
+        size="icon-xl"
+        class="press"
+        [attr.aria-pressed]="buscadorAbierto()"
+        [attr.aria-label]="buscadorAbierto() ? 'Cerrar buscador' : 'Buscar una serie'"
+        (click)="toggleBuscador()"
       >
-        {{ canal.nombre }}
+        <app-icon [name]="buscadorAbierto() ? 'close' : 'search'" [size]="36" />
       </button>
+    </div>
+
+    @if (buscadorAbierto()) {
+      <div class="mb-4 animate-in fade-in-0 slide-in-from-top-2">
+        <ui-input
+          type="search"
+          size="xl"
+          placeholder="Escribe el nombre de una serie..."
+          aria-label="Buscar serie por titulo"
+          [value]="query()"
+          (valueChange)="onBuscar($event)"
+        />
+      </div>
     }
+
+    <ui-toggle-group
+      type="single"
+      [allowDeselection]="false"
+      [value]="seleccion()"
+      (valueChange)="onCanalChange($event)"
+      aria-label="Elegir canal"
+      class="grid w-full grid-cols-3 gap-3 rounded-none border-0 bg-transparent p-0 shadow-none sm:grid-cols-5 lg:grid-cols-9"
+    >
+      <ui-toggle-group-item [value]="TODOS" variant="channel" size="xl" style="--canal: var(--color-sunny)">
+        <app-icon name="star" [size]="32" [filled]="true" />
+        <span>Todos</span>
+      </ui-toggle-group-item>
+      @for (canal of canales(); track canal.id; let i = $index) {
+        <ui-toggle-group-item
+          [value]="canal.slug"
+          variant="channel"
+          size="xl"
+          [style.--canal]="'var(--color-' + canal.slug + ')'"
+        >
+          <span
+            class="font-display flex size-10 items-center justify-center rounded-full border-[3px] border-ink text-xs"
+            [style.background]="'var(--color-' + canal.slug + ')'"
+            aria-hidden="true"
+            >{{ numeroCanal(i) }}</span
+          >
+          <span class="max-w-24 whitespace-normal text-center leading-tight">{{ canal.nombre }}</span>
+        </ui-toggle-group-item>
+      }
+    </ui-toggle-group>
   </div>
 
-  <input
-    type="search"
-    placeholder="Buscar una serie..."
-    [ngModel]="query()"
-    (ngModelChange)="onBuscar($event)"
-    class="w-full rounded-lg border border-crt-line bg-crt-panel px-4 py-3 text-base text-crt-text"
-    aria-label="Buscar serie por titulo"
-  />
+  @if (canalActivoNombre() || query()) {
+    <div class="flex flex-wrap items-center gap-3">
+      @if (canalActivoNombre()) {
+        <ui-badge
+          class="border-[3px] border-ink px-4 py-2 text-base text-ink"
+          [style.background]="'var(--color-' + canalActivo() + ')'"
+          >{{ canalActivoNombre() }}</ui-badge
+        >
+      }
+      @if (query()) {
+        <ui-badge variant="outline" class="border-[3px] bg-surface px-4 py-2 text-base">“{{ query() }}”</ui-badge>
+      }
+      <button uiButton type="button" variant="outline" size="sm" (click)="verTodo()">
+        <app-icon name="close" [size]="18" /> Quitar filtro
+      </button>
+    </div>
+  }
 
   @if (error()) {
-    <p role="alert" class="text-marvel">{{ error() }}</p>
+    <ui-alert variant="destructive" role="alert" class="rounded-3xl border-4 bg-surface p-6 text-lg">
+      <app-icon slot="icon" name="tv" [size]="40" />
+      <div class="flex flex-1 flex-col gap-3">
+        <ui-alert-title class="font-display text-sm">¡Uy! La tele no tiene señal</ui-alert-title>
+        <ui-alert-description>{{ error() }}</ui-alert-description>
+        <button uiButton type="button" size="lg" class="w-fit press" (click)="reintentar()">
+          <app-icon name="refresh" /> Probar otra vez
+        </button>
+      </div>
+    </ui-alert>
   } @else if (cargando()) {
-    <p class="text-crt-muted">Cargando catalogo...</p>
-  } @else if (series().length === 0) {
-    <p class="text-crt-muted">No encontramos series con ese filtro.</p>
-  } @else {
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-      @for (serie of series(); track serie.id) {
-        <a
-          [routerLink]="['/serie', serie.slug]"
-          class="group flex flex-col overflow-hidden rounded-xl border border-crt-line bg-crt-panel"
-        >
-          <div class="h-1" [style.background]="'var(--color-' + serie.canal_slug + ')'"></div>
-          <img [src]="serie.poster" [alt]="serie.titulo" class="aspect-[2/3] w-full object-cover" loading="lazy" />
-          <div class="flex flex-1 flex-col gap-1 p-3">
-            <h2 class="text-sm font-semibold text-crt-text group-hover:text-otros">{{ serie.titulo }}</h2>
-            <p class="text-xs text-crt-muted">{{ serie.canal_nombre }} @if (serie.anio) { &middot; {{ serie.anio }} }</p>
-          </div>
-        </a>
+    <div class="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5" aria-busy="true" aria-label="Cargando series">
+      @for (p of placeholders; track p) {
+        <ui-skeleton height="auto" class="aspect-[2/3] rounded-3xl border-4 border-ink/20" />
       }
     </div>
+  } @else if (series().length === 0) {
+    <div class="flex flex-col items-center gap-4 rounded-3xl border-4 border-dashed border-ink bg-surface p-10 text-center">
+      <app-icon name="tv" [size]="72" class="animate-bob text-grape" />
+      <p class="font-display text-sm">Aqui no hay nada...</p>
+      <button uiButton type="button" size="xl" class="press" (click)="verTodo()">
+        <app-icon name="star" [filled]="true" /> Ver todo
+      </button>
+    </div>
+  } @else {
+    <ul class="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5" role="list">
+      @for (serie of series(); track serie.id; let i = $index) {
+        <li>
+          <a
+            [routerLink]="['/serie', serie.slug]"
+            [attr.aria-label]="serie.titulo + ', ' + serie.canal_nombre"
+            class="group block rounded-3xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-4"
+          >
+            <ui-card
+              class="relative overflow-hidden rounded-3xl border-4 border-ink shadow-md transition-transform duration-200 group-hover:-translate-y-1 group-hover:rotate-0 group-active:translate-y-1 group-active:shadow-sm"
+              [style.rotate]="(i % 3 === 0 ? -1.5 : i % 3 === 1 ? 1 : 0) + 'deg'"
+            >
+              <div class="relative aspect-[2/3] w-full bg-muted">
+                @if (serie.poster) {
+                  <img [src]="serie.poster" alt="" class="size-full object-cover" loading="lazy" />
+                } @else {
+                  <div class="flex size-full items-center justify-center text-muted-foreground">
+                    <app-icon name="tv" [size]="56" />
+                  </div>
+                }
+                <span
+                  class="absolute right-2 top-2 flex size-14 items-center justify-center rounded-full border-4 border-ink bg-sunny text-ink opacity-90 shadow-sm transition-transform group-hover:scale-110"
+                  aria-hidden="true"
+                >
+                  <app-icon name="play" [size]="26" [filled]="true" />
+                </span>
+              </div>
+              <div
+                class="border-t-4 border-ink px-3 py-3"
+                [style.background]="'var(--color-' + serie.canal_slug + ')'"
+              >
+                <h2 class="font-body line-clamp-2 rounded-xl bg-surface/90 px-2 py-1.5 text-center text-base font-black leading-tight tracking-normal text-ink">
+                  {{ serie.titulo }}
+                </h2>
+              </div>
+            </ui-card>
+          </a>
+        </li>
+      }
+    </ul>
   }
 </section>

@@ -1,30 +1,85 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+@plugin "tailwindcss-animate";
+
+/* Volt UI copiado en src/app/ui (modo copy-and-own): Tailwind debe escanearlo. */
+@source "./app/ui";
 
 @font-face {
-  font-family: "Inter";
-  src: url("/fonts/inter/inter-variable.woff2") format("woff2");
+  font-family: 'Inter';
+  src: url('/fonts/inter/inter-variable.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Press Start 2P";
-  src: url("/fonts/press-start-2p/press-start-2p-400.woff2") format("woff2");
+  font-family: 'Press Start 2P';
+  src: url('/fonts/press-start-2p/press-start-2p-400.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
-@theme {
-  --font-display: "Press Start 2P", "Inter", system-ui, sans-serif;
-  --font-body: "Inter", system-ui, sans-serif;
+/* ------------------------------------------------------------------ */
+/* Tokens semanticos de Volt UI (mismo contrato que themes/core.css)   */
+/* ------------------------------------------------------------------ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--surface-foreground);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--surface-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--muted);
+  --color-accent-foreground: var(--foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
 
-  --color-crt-bg: #0b0e14;
-  --color-crt-panel: #121826;
-  --color-crt-line: #1f2937;
-  --color-crt-text: #e6edf5;
-  --color-crt-muted: #93a2b8;
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-error: var(--error);
+  --color-error-foreground: var(--error-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  --radius-sm: calc(var(--radius) - 0.25rem);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 0.25rem);
+  --radius-xl: calc(var(--radius) + 0.5rem);
+  --radius-full: 9999px;
+
+  --shadow-sm: var(--volt-shadow-sm);
+  --shadow: var(--volt-shadow);
+  --shadow-md: var(--volt-shadow-md);
+  --shadow-lg: var(--volt-shadow-lg);
+}
+
+@theme {
+  --font-display: 'Press Start 2P', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  /* Paleta "sabado por la manana" de los 90 */
+  --color-ink: #1b1340;
+  --color-paper: #fff6d6;
+  --color-bubble: #ff4fa3;
+  --color-slime: #7ed321;
+  --color-sunny: #ffd400;
+  --color-sky: #3ec7ff;
+  --color-grape: #8b3dff;
+  --color-tangerine: #ff7a00;
 
   --color-cartoon-network: #ff6a00;
   --color-nickelodeon: #f36c21;
@@ -34,17 +89,78 @@
   --color-warner-channel: #7b2ff7;
   --color-marvel: #ed1d24;
   --color-otros: #22d3ee;
+
+  --animate-wiggle: wiggle 0.5s ease-in-out;
+  --animate-bob: bob 3s ease-in-out infinite;
+
+  @keyframes wiggle {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    25% {
+      transform: rotate(-3deg);
+    }
+    75% {
+      transform: rotate(3deg);
+    }
+  }
+  @keyframes bob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
+  }
 }
 
 /*
- * Tailwind v4 solo emite las variables de @theme que detecta como usadas en
- * clases literales; los colores por canal se aplican dinamicamente via
- * [style.background]="'var(--color-' + canal.slug + ')'", asi que los
- * redeclaramos aqui en CSS plano para que sobrevivan al tree-shaking.
+ * Tema "retro 90s" para Volt UI: basado en el preset de estilo `retro`
+ * (bordes gruesos y sombras duras) con colores de caricatura.
+ * Texto oscuro sobre colores vivos para mantener contraste >= 4.5:1.
  */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
+  --background: #fff6d6;
+  --foreground: #1b1340;
+  --surface: #ffffff;
+  --surface-foreground: #1b1340;
+  --muted: #fdeaa8;
+  --muted-foreground: #4a3f75;
+  --border: #1b1340;
+  --ring: #8b3dff;
+  --input: #1b1340;
+
+  --primary: #ff7a00;
+  --primary-foreground: #1b1340;
+  --secondary: #3ec7ff;
+  --secondary-foreground: #1b1340;
+  --destructive: #ff3b3b;
+  --destructive-foreground: #1b1340;
+  --success: #7ed321;
+  --success-foreground: #1b1340;
+  --warning: #ffd400;
+  --warning-foreground: #1b1340;
+  --error: #d7263d;
+  --error-foreground: #ffffff;
+  --info: #3ec7ff;
+  --info-foreground: #1b1340;
+
+  /* Estilo `retro` de Volt, mas redondo y con sombras de pegatina */
+  --radius: 1rem;
+  --volt-shadow-sm: 0 3px 0 var(--border);
+  --volt-shadow: 0 5px 0 var(--border);
+  --volt-shadow-md: 0 7px 0 var(--border);
+  --volt-shadow-lg: 0 10px 0 var(--border);
+
+  /*
+   * Los colores por canal se aplican dinamicamente via
+   * [style.--canal]="'var(--color-' + slug + ')'", asi que los
+   * redeclaramos en CSS plano para que sobrevivan al tree-shaking de Tailwind.
+   */
   --color-cartoon-network: #ff6a00;
   --color-nickelodeon: #f36c21;
   --color-fox-kids: #0b6cf0;
@@ -55,39 +171,65 @@
   --color-otros: #22d3ee;
 }
 
-html {
-  font-size: 16px;
+@layer base {
+  html {
+    font-size: 16px;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    /* Patron Memphis de los 90: triangulos, zigzags y puntos */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='none' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 30l10-12 10 12 10-12 10 12' stroke='%23ff4fa3' opacity='.35'/%3E%3Cpath d='M110 40l14 24h-28z' stroke='%233ec7ff' opacity='.4'/%3E%3Ccircle cx='40' cy='118' r='9' stroke='%238b3dff' opacity='.3'/%3E%3Cpath d='M100 120q10-16 20 0t20 0' stroke='%237ed321' opacity='.4'/%3E%3C/g%3E%3Cg fill='%23ff7a00' opacity='.3'%3E%3Ccircle cx='80' cy='80' r='3'/%3E%3Ccircle cx='140' cy='14' r='3'/%3E%3Ccircle cx='10' cy='80' r='3'/%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: 0.02em;
+    line-height: 1.35;
+  }
 }
 
-body {
-  background-color: var(--color-crt-bg);
-  color: var(--color-crt-text);
-  font-family: var(--font-body);
-  min-height: 100vh;
-  background-image:
-    radial-gradient(ellipse at top, rgba(255, 255, 255, 0.04), transparent 60%),
-    repeating-linear-gradient(
-      0deg,
-      rgba(255, 255, 255, 0.02) 0px,
-      rgba(255, 255, 255, 0.02) 1px,
-      transparent 1px,
-      transparent 3px
-    );
+/* Texto "pegatina": contorno oscuro como en los logos de caricaturas */
+.text-sticker {
+  -webkit-text-stroke: 2px var(--color-ink);
+  paint-order: stroke fill;
+  text-shadow: 3px 3px 0 var(--color-ink);
 }
 
-h1, h2, h3, .font-display {
-  font-family: var(--font-display);
-  letter-spacing: 0.02em;
+/* Brillo y lineas de barrido de pantalla CRT sobre el video */
+.crt-glare {
+  background:
+    radial-gradient(ellipse at 30% 15%, rgba(255, 255, 255, 0.14), transparent 45%),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 3px);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.55);
+}
+
+/* Pulsacion tipo boton de mando: baja y pierde la sombra */
+.press {
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+.press:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 var(--border);
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-otros);
+  outline: 4px solid var(--ring);
   outline-offset: 3px;
-  border-radius: 4px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;

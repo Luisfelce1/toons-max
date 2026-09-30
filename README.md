@@ -165,6 +165,14 @@ sin stack trace).
 > guardando su hash en base de datos. No esta implementado en esta v1; se documenta aqui como
 > decision consciente.
 
+## UI: Volt UI + estetica 90s para peques
+
+- Componentes de [Volt UI](https://github.com/Andersseen/volt-ui) en modo **copy-and-own** (`npx @voltui/cli add ...`), copiados en `web/src/app/ui`. Se usa este modo (y no el paquete `@voltui/components`) porque el paquete declara peer `@angular/core ^21.2` y el proyecto esta en Angular 22.
+- Tema propio en `web/src/styles.scss`: tokens semanticos de Volt + preset de estilo `retro` (bordes gruesos, sombras duras) con paleta de caricaturas y texto oscuro sobre colores vivos (contraste >= 4.5:1).
+- Variantes extra para ninos de 4+: botones `xl` / `icon-xl` (>= 80px), `ToggleGroup` con variante `channel` (mando a distancia por canal), input `xl`.
+- UX: navegacion por iconos y colores, episodios como fichas numeradas, reproductor en una "tele" CRT con botones gigantes anterior/siguiente, y cierre de sesion protegido tras la "Zona de papas".
+- Para anadir mas componentes: `cd web && npx @voltui/cli add <nombre>` (dependencias: `ng-primitives`, `class-variance-authority`, `clsx`, `tailwind-merge`, `@angular/cdk`).
+
 ## Media Session (alcance real)
 
 El reproductor `<video>` (episodios con `video_url`) configura
