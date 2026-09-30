@@ -76,7 +76,7 @@ describe('middlewareHyperdrive', () => {
   });
 
   it('da un pool por peticion a getPool() y lo cierra una sola vez al terminar', () => {
-    const poolFalso = { end: vi.fn().mockResolvedValue(undefined) };
+    const poolFalso = { end: vi.fn().mockResolvedValue(undefined), query: vi.fn(), execute: vi.fn() };
     const crearPool = vi.fn().mockReturnValue(poolFalso);
     const mw = middlewareHyperdrive(() => hyperdrive, { crearPool });
     const res = new EventEmitter();
@@ -84,7 +84,10 @@ describe('middlewareHyperdrive', () => {
     mw({}, res, () => {
       visto = getPool();
     });
-    expect(visto).toBe(poolFalso);
+    // Hyperdrive no admite COM_STMT_PREPARE: execute() debe ir por query().
+    visto.execute('SELECT ?', [1]);
+    expect(poolFalso.query).toHaveBeenCalledWith('SELECT ?', [1]);
+    expect(poolFalso.execute).not.toHaveBeenCalled();
     expect(crearPool.mock.calls[0][0]).toMatchObject({ disableEval: true, connectionLimit: 3 });
     res.emit('finish');
     res.emit('close');

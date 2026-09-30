@@ -87,6 +87,19 @@ export function hyperdriveConfig(hyperdrive) {
 }
 
 /**
+ * Hyperdrive no admite prepared statements de MySQL (COM_STMT_PREPARE), que es lo que
+ * genera `execute()`. En Workers lo redirigimos a `query()`: mysql2 sustituye los `?`
+ * escapando los valores en el cliente, asi que sigue protegido contra inyeccion SQL.
+ */
+export function sinPreparedStatements(poolReal) {
+  return {
+    execute: (sql, params) => poolReal.query(sql, params),
+    query: (sql, params) => poolReal.query(sql, params),
+    end: () => poolReal.end(),
+  };
+}
+
+/**
  * Middleware de Express para Workers: pool por peticion via Hyperdrive.
  * `obtenerHyperdrive` devuelve el binding (env.HYPERDRIVE).
  */
@@ -95,7 +108,9 @@ export function middlewareHyperdrive(obtenerHyperdrive, { crearPool = mysql.crea
     const hyperdrive = obtenerHyperdrive();
     if (!hyperdrive) return next();
 
-    const poolPeticion = crearPool({ ...hyperdriveConfig(hyperdrive), ...OPCIONES_POOL, connectionLimit: 3 });
+    const poolPeticion = sinPreparedStatements(
+      crearPool({ ...hyperdriveConfig(hyperdrive), ...OPCIONES_POOL, connectionLimit: 3 }),
+    );
     let cerrado = false;
     const cerrar = () => {
       if (cerrado) return;
