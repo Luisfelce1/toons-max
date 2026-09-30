@@ -1,11 +1,16 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../api.service';
+import { IconComponent } from '../../shared/icon';
+import { UiNativeButton } from '../../ui/button';
+import { UiCard } from '../../ui/card';
+import { UiInput } from '../../ui/input';
+import { UiSpinner } from '../../ui/spinner';
+import { UiAlert, UiAlertDescription } from '../../ui/alert';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule],
+  imports: [IconComponent, UiNativeButton, UiCard, UiInput, UiSpinner, UiAlert, UiAlertDescription],
   templateUrl: './login.html',
 })
 export class LoginPage {

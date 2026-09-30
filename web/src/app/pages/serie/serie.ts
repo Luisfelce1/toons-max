@@ -1,11 +1,26 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiService } from '../../api.service';
 import type { Episodio, SerieDetalle } from '../../models';
+import { IconComponent } from '../../shared/icon';
+import { UiNativeButton } from '../../ui/button';
+import { UiBadge } from '../../ui/badge';
+import { UiSkeleton } from '../../ui/skeleton';
+import { UiAlert, UiAlertDescription, UiAlertTitle } from '../../ui/alert';
+import { agruparPorTemporada, primerEpisodioConVideo, tieneVideo } from '../../utils/episodios';
 
 @Component({
   selector: 'app-serie',
-  imports: [RouterLink],
+  imports: [
+    RouterLink,
+    IconComponent,
+    UiNativeButton,
+    UiBadge,
+    UiSkeleton,
+    UiAlert,
+    UiAlertTitle,
+    UiAlertDescription,
+  ],
   templateUrl: './serie.html',
 })
 export class SeriePage {
@@ -16,6 +31,10 @@ export class SeriePage {
   readonly episodios = signal<Episodio[]>([]);
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
+
+  readonly temporadas = computed(() => agruparPorTemporada(this.episodios()));
+  readonly primero = computed(() => primerEpisodioConVideo(this.episodios()));
+  readonly tieneVideo = tieneVideo;
 
   constructor() {
     const slug = this.route.snapshot.paramMap.get('slug')!;

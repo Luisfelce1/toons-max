@@ -4,10 +4,24 @@ import { ApiService } from '../../api.service';
 import { YoutubePlayerService } from '../../youtube-player.service';
 import { anteriorEpisodio, siguienteEpisodio } from '../../utils/player-nav';
 import type { Episodio, SerieDetalle } from '../../models';
+import { IconComponent } from '../../shared/icon';
+import { UiNativeButton } from '../../ui/button';
+import { UiSkeleton } from '../../ui/skeleton';
+import { UiSpinner } from '../../ui/spinner';
+import { UiAlert, UiAlertDescription, UiAlertTitle } from '../../ui/alert';
 
 @Component({
   selector: 'app-reproductor',
-  imports: [RouterLink],
+  imports: [
+    RouterLink,
+    IconComponent,
+    UiNativeButton,
+    UiSkeleton,
+    UiSpinner,
+    UiAlert,
+    UiAlertTitle,
+    UiAlertDescription,
+  ],
   templateUrl: './reproductor.html',
 })
 export class ReproductorPage implements OnDestroy {
