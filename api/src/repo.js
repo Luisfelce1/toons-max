@@ -2,6 +2,10 @@ import { getPool } from './db.js';
 import { isValidVideoUrl, isValidYoutubeId } from './utils.js';
 
 const MAX_LIMIT = 200;
+
+/** Un episodio se puede ver si tiene video de YouTube oficial o un MP4 (dominio publico). */
+const EPISODIO_CON_VIDEO = '(e.youtube_id IS NOT NULL OR e.video_url IS NOT NULL)';
+const SERIE_CON_VIDEO = `EXISTS (SELECT 1 FROM episodio e WHERE e.serie_id = s.id AND ${EPISODIO_CON_VIDEO})`;
 const DEFAULT_LIMIT = 50;
 
 export async function upsertCanal({ slug, nombre }) {
@@ -15,9 +19,13 @@ export async function upsertCanal({ slug, nombre }) {
   return row.id;
 }
 
-export async function listCanales() {
+/** `soloConVideo`: solo canales con alguna serie que se pueda ver (lo que usa la app). */
+export async function listCanales({ soloConVideo = false } = {}) {
   const pool = getPool();
-  const [rows] = await pool.execute('SELECT id, slug, nombre FROM canal ORDER BY nombre ASC');
+  const where = soloConVideo
+    ? `WHERE EXISTS (SELECT 1 FROM serie s WHERE s.canal_id = c.id AND ${SERIE_CON_VIDEO})`
+    : '';
+  const [rows] = await pool.execute(`SELECT c.id, c.slug, c.nombre FROM canal c ${where} ORDER BY c.nombre ASC`);
   return rows;
 }
 
@@ -42,9 +50,9 @@ export async function upsertSerie({ slug, titulo, anio, sinopsis, poster, tipo, 
   return row.id;
 }
 
-export async function listSeries({ canal, q, limit = DEFAULT_LIMIT, offset = 0 } = {}) {
+export async function listSeries({ canal, q, limit = DEFAULT_LIMIT, offset = 0, soloConVideo = false } = {}) {
   const pool = getPool();
-  const clauses = [];
+  const clauses = soloConVideo ? [SERIE_CON_VIDEO] : [];
   const params = [];
 
   if (canal) {
@@ -84,14 +92,16 @@ export async function listSeries({ canal, q, limit = DEFAULT_LIMIT, offset = 0 }
   return { total, limit: safeLimit, offset: safeOffset, series: rows };
 }
 
-export async function getSerieBySlug(slug) {
+export async function getSerieBySlug(slug, { soloConVideo = false } = {}) {
   const pool = getPool();
+  const filtroEpisodios = soloConVideo ? ` AND ${EPISODIO_CON_VIDEO}` : '';
+  const filtroSerie = soloConVideo ? ` AND ${SERIE_CON_VIDEO}` : '';
   const [[serie]] = await pool.execute(
     `SELECT s.id, s.slug, s.titulo, s.anio, s.sinopsis, s.poster, s.tipo,
             c.slug AS canal_slug, c.nombre AS canal_nombre,
-            (SELECT COUNT(*) FROM episodio e WHERE e.serie_id = s.id) AS total_episodios
+            (SELECT COUNT(*) FROM episodio e WHERE e.serie_id = s.id${filtroEpisodios}) AS total_episodios
      FROM serie s JOIN canal c ON c.id = s.canal_id
-     WHERE s.slug = ?`,
+     WHERE s.slug = ?${filtroSerie}`,
     [slug]
   );
   return serie ?? null;
@@ -140,21 +150,23 @@ export async function setEpisodioVideo(serieId, temporada, numero, { youtube_id:
   return result.affectedRows > 0;
 }
 
-export async function listEpisodiosBySerie(serieId) {
+export async function listEpisodiosBySerie(serieId, { soloConVideo = false } = {}) {
   const pool = getPool();
+  const filtro = soloConVideo ? ` AND ${EPISODIO_CON_VIDEO}` : '';
   const [rows] = await pool.execute(
-    `SELECT id, serie_id, temporada, numero, titulo, duracion, resumen, video_url, youtube_id
-     FROM episodio WHERE serie_id = ? ORDER BY temporada ASC, numero ASC`,
+    `SELECT e.id, e.serie_id, e.temporada, e.numero, e.titulo, e.duracion, e.resumen, e.video_url, e.youtube_id
+     FROM episodio e WHERE e.serie_id = ?${filtro} ORDER BY e.temporada ASC, e.numero ASC`,
     [serieId]
   );
   return rows;
 }
 
-export async function getEpisodioById(id) {
+export async function getEpisodioById(id, { soloConVideo = false } = {}) {
   const pool = getPool();
+  const filtro = soloConVideo ? ` AND ${EPISODIO_CON_VIDEO}` : '';
   const [[row]] = await pool.execute(
-    `SELECT id, serie_id, temporada, numero, titulo, duracion, resumen, video_url, youtube_id
-     FROM episodio WHERE id = ?`,
+    `SELECT e.id, e.serie_id, e.temporada, e.numero, e.titulo, e.duracion, e.resumen, e.video_url, e.youtube_id
+     FROM episodio e WHERE e.id = ?${filtro}`,
     [id]
   );
   return row ?? null;

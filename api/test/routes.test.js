@@ -44,32 +44,49 @@ describe('data routes', () => {
   });
 
   describe('GET /api/canales', () => {
-    it('returns the seeded channels ordered by name', async () => {
+    it('returns only channels with something playable', async () => {
+      // Nickelodeon solo tiene Hey Arnold!, sin episodios con video.
       const res = await request(app).get('/api/canales').set(authHeader);
       expect(res.status).toBe(200);
-      expect(res.body.map((c) => c.slug)).toEqual(['cartoon-network', 'nickelodeon']);
+      expect(res.body.map((c) => c.slug)).toEqual(['cartoon-network']);
     });
   });
 
   describe('GET /api/series', () => {
-    it('lists all series with total/limit/offset', async () => {
+    it('lists only series with at least one playable episode', async () => {
       const res = await request(app).get('/api/series').set(authHeader);
       expect(res.status).toBe(200);
-      expect(res.body.total).toBe(2);
-      expect(res.body.series).toHaveLength(2);
+      expect(res.body.total).toBe(1);
+      expect(res.body.series.map((s) => s.slug)).toEqual(['coraje-el-perro-cobarde']);
     });
 
     it('filters by canal slug', async () => {
-      const res = await request(app).get('/api/series?canal=nickelodeon').set(authHeader);
+      const res = await request(app).get('/api/series?canal=cartoon-network').set(authHeader);
       expect(res.status).toBe(200);
       expect(res.body.total).toBe(1);
-      expect(res.body.series[0].slug).toBe('hey-arnold');
+      expect(res.body.series[0].slug).toBe('coraje-el-perro-cobarde');
+    });
+
+    it('a channel whose series have no video returns nothing', async () => {
+      const res = await request(app).get('/api/series?canal=nickelodeon').set(authHeader);
+      expect(res.status).toBe(200);
+      expect(res.body.total).toBe(0);
     });
 
     it('searches by title with q', async () => {
-      const res = await request(app).get('/api/series?q=arnold').set(authHeader);
+      const res = await request(app).get('/api/series?q=coraje').set(authHeader);
       expect(res.status).toBe(200);
-      expect(res.body.series.some((s) => s.slug === 'hey-arnold')).toBe(true);
+      expect(res.body.series.some((s) => s.slug === 'coraje-el-perro-cobarde')).toBe(true);
+    });
+
+    it('shows a series as soon as one of its episodes gets a video', async () => {
+      const [[{ id }]] = await pool.query("SELECT id FROM serie WHERE slug = 'hey-arnold'");
+      await pool.query(
+        "INSERT INTO episodio (serie_id, temporada, numero, titulo, video_url) VALUES (?, 1, 1, 'Ep', 'https://archive.org/download/x/x.mp4')",
+        [id]
+      );
+      const res = await request(app).get('/api/series').set(authHeader);
+      expect(res.body.total).toBe(2);
     });
 
     it('rejects a non-numeric limit with 400', async () => {
@@ -84,11 +101,16 @@ describe('data routes', () => {
   });
 
   describe('GET /api/series/:slug', () => {
-    it('returns the series with total_episodios', async () => {
+    it('returns the series counting only playable episodes', async () => {
       const res = await request(app).get('/api/series/coraje-el-perro-cobarde').set(authHeader);
       expect(res.status).toBe(200);
       expect(res.body.titulo).toBe('Coraje el perro cobarde');
-      expect(res.body.total_episodios).toBe(2);
+      expect(res.body.total_episodios).toBe(1);
+    });
+
+    it('404s for a series without playable episodes', async () => {
+      const res = await request(app).get('/api/series/hey-arnold').set(authHeader);
+      expect(res.status).toBe(404);
     });
 
     it('404s for an unknown slug', async () => {
@@ -103,10 +125,11 @@ describe('data routes', () => {
   });
 
   describe('GET /api/series/:slug/episodios', () => {
-    it('returns episodes ordered by temporada and numero', async () => {
+    it('returns only playable episodes, ordered', async () => {
       const res = await request(app).get('/api/series/coraje-el-perro-cobarde/episodios').set(authHeader);
       expect(res.status).toBe(200);
-      expect(res.body.map((e) => e.numero)).toEqual([1, 2]);
+      expect(res.body.map((e) => e.numero)).toEqual([1]);
+      expect(res.body[0].youtube_id).toBe('dQw4w9WgXcQ');
     });
   });
 
@@ -117,6 +140,12 @@ describe('data routes', () => {
       const res = await request(app).get(`/api/episodios/${id}`).set(authHeader);
       expect(res.status).toBe(200);
       expect(res.body.id).toBe(id);
+    });
+
+    it('404s for an episode without video', async () => {
+      const [[{ id }]] = await pool.query('SELECT id FROM episodio WHERE numero = 2');
+      const res = await request(app).get(`/api/episodios/${id}`).set(authHeader);
+      expect(res.status).toBe(404);
     });
 
     it('404s for an unknown id', async () => {
