@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, ViewChild, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnDestroy, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../api.service';
 import { YoutubePlayerService } from '../../youtube-player.service';
@@ -30,8 +30,10 @@ export class ReproductorPage implements OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
-  @ViewChild('videoEl') videoEl?: ElementRef<HTMLVideoElement>;
-  @ViewChild('ytEl') ytEl?: ElementRef<HTMLDivElement>;
+  // Signals: sin zone.js, los huecos del reproductor existen solo tras renderizar el
+  // episodio; el effect de abajo monta el reproductor en cuanto aparecen.
+  readonly videoEl = viewChild<ElementRef<HTMLVideoElement>>('videoEl');
+  readonly ytEl = viewChild<ElementRef<HTMLDivElement>>('ytEl');
 
   readonly slug = this.route.snapshot.paramMap.get('slug')!;
 
@@ -42,8 +44,24 @@ export class ReproductorPage implements OnDestroy {
   readonly error = signal<string | null>(null);
 
   private ytPlayer: { destroy(): void } | null = null;
+  /** Episodio cuyo reproductor ya esta montado (evita montar dos veces). */
+  private montadoId: number | null = null;
 
   constructor() {
+    effect(() => {
+      const episodio = this.episodio();
+      const yt = this.ytEl();
+      const video = this.videoEl();
+      if (!episodio || episodio.id === this.montadoId) return;
+      if (episodio.youtube_id && yt) {
+        this.montadoId = episodio.id;
+        untracked(() => this.montarYoutube(episodio, yt.nativeElement));
+      } else if (episodio.video_url && video) {
+        this.montadoId = episodio.id;
+        untracked(() => this.configurarMediaSession(episodio));
+      }
+    });
+
     this.cargar();
     this.route.paramMap.subscribe((params) => {
       const epiId = Number(params.get('epiId'));
@@ -88,24 +106,24 @@ export class ReproductorPage implements OnDestroy {
 
   private async cargarEpisodio(epiId: number): Promise<void> {
     this.destroyYoutubePlayer();
+    this.montadoId = null;
     const episodio = await this.api.episodio(epiId);
     this.episodio.set(episodio);
-    queueMicrotask(() => this.montarReproductor());
   }
 
-  private montarReproductor(): void {
-    const episodio = this.episodio();
-    if (!episodio) return;
-
-    if (episodio.youtube_id && this.ytEl) {
-      this.yt
-        .createPlayer(this.ytEl.nativeElement, episodio.youtube_id, () => this.irASiguiente())
-        .then((player) => {
-          this.ytPlayer = player;
-        });
-    } else if (episodio.video_url && this.videoEl) {
-      this.configurarMediaSession(episodio);
-    }
+  private montarYoutube(episodio: Episodio, contenedor: HTMLElement): void {
+    this.yt
+      .createPlayer(contenedor, episodio.youtube_id!, () => this.irASiguiente())
+      .then((player) => {
+        // Si mientras cargaba la API se cambio de episodio, este reproductor sobra.
+        if (this.episodio()?.id !== episodio.id) {
+          player.destroy();
+          return;
+        }
+        this.ytPlayer = player;
+      })
+      .catch(() => this.error.set('No se pudo cargar el reproductor de YouTube.'));
+    this.configurarMediaSession(episodio);
   }
 
   private configurarMediaSession(episodio: Episodio): void {
