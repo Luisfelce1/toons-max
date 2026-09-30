@@ -30,7 +30,12 @@ export type Motivo =
   | 'claqueta'
   | 'planeta'
   | 'libro'
-  | 'palmera';
+  | 'palmera'
+  | 'charco'
+  | 'cometa'
+  | 'lupa'
+  | 'ordenador'
+  | 'bicho';
 
 /** Palabras clave (sin acentos, minusculas) -> motivo. La primera que coincide gana. */
 const REGLAS: ReadonlyArray<readonly [string, Motivo]> = [
@@ -70,6 +75,13 @@ const REGLAS: ReadonlyArray<readonly [string, Motivo]> = [
   ['arthur', 'libro'],
   ['thornberry', 'palmera'],
   ['timon', 'palmera'],
+  ['peppa', 'charco'],
+  ['caillou', 'cometa'],
+  ['totally spies', 'lupa'],
+  ['espias', 'lupa'],
+  ['lyoko', 'ordenador'],
+  ['oggy', 'bicho'],
+  ['barbapapa', 'nube'],
 ];
 
 function normalizar(texto: string): string {

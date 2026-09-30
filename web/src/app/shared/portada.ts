@@ -249,6 +249,37 @@ interface Forma {
                 <path d="M0 -18 Q18 -27 35 -20 V24 Q18 17 0 26 Z" fill="#fff" />
                 <path d="M-26 -8 Q-14 -12 -6 -8 M-26 2 Q-14 -2 -6 2 M6 -8 Q14 -12 26 -8 M6 2 Q14 -2 26 2" fill="none" stroke-width="2" />
               }
+              @case ('charco') {
+                <ellipse cx="0" cy="22" rx="36" ry="10" fill="#8d5a2b" />
+                <path d="M-22 14 l-6 -12 M-10 10 l-2 -14 M10 10 l3 -14 M22 14 l7 -11" stroke="#8d5a2b" stroke-width="4" />
+                <path d="M-24 -26 h12 v18 q0 4 5 4 h4 q6 0 6 6 v6 h-27 Z" fill="#e53935" />
+                <path d="M4 -26 h12 v18 q0 4 5 4 h4 q6 0 6 6 v6 h-27 Z" fill="#e53935" />
+              }
+              @case ('cometa') {
+                <path d="M4 -34 L28 -8 L4 18 L-20 -8 Z" fill="#ff7a00" />
+                <path d="M4 -34 V18 M-20 -8 H28" stroke-width="3" />
+                <path d="M4 18 q-10 8 -4 14 t-8 12" fill="none" stroke-width="3" />
+                <path d="M-6 26 l-6 -4 l2 7 Z M-10 36 l-6 -2 l4 6 Z" fill="#3ec7ff" stroke-width="2" />
+              }
+              @case ('lupa') {
+                <circle cx="-6" cy="-8" r="20" fill="#bde7ff" stroke-width="6" />
+                <path d="M8 6 L30 28" stroke-width="10" />
+                <path d="M-18 -16 q6 -8 14 -6" fill="none" stroke="#fff" stroke-width="4" />
+                <path d="M-40 30 q10 -6 20 0 M22 -34 l4 8 l8 1 l-6 5 l2 8 l-8 -4 l-8 4 l2 -8 l-6 -5 l8 -1 Z" fill="#ff4fa3" stroke-width="2" />
+              }
+              @case ('ordenador') {
+                <rect x="-34" y="-30" width="68" height="46" rx="5" fill="#2b2b2b" />
+                <rect x="-28" y="-24" width="56" height="34" rx="3" fill="#3ec7ff" stroke-width="2" />
+                <path d="M0 -18 L12 -11 V3 L0 10 L-12 3 V-11 Z M0 -18 V-4 M0 -4 L12 -11 M0 -4 L-12 -11" fill="#fff6d6" stroke-width="2" />
+                <path d="M-8 16 L-12 30 H12 L8 16" fill="#8b3dff" />
+              }
+              @case ('bicho') {
+                <ellipse cx="0" cy="6" rx="16" ry="22" fill="#8d5a2b" />
+                <circle cx="0" cy="-20" r="10" fill="#8d5a2b" />
+                <path d="M-4 -28 q-8 -10 -16 -8 M4 -28 q8 -10 16 -8 M-14 -2 L-30 -10 M-14 10 L-32 12 M-12 22 L-28 32 M14 -2 L30 -10 M14 10 L32 12 M12 22 L28 32" fill="none" stroke-width="3" />
+                <circle cx="-4" cy="-21" r="2.5" fill="#fff" stroke="none" />
+                <circle cx="4" cy="-21" r="2.5" fill="#fff" stroke="none" />
+              }
               @case ('palmera') {
                 <circle cx="24" cy="-24" r="9" fill="#ffd400" stroke-width="3" />
                 <path d="M6 34 Q0 10 -2 -10" fill="none" stroke="#8d5a2b" stroke-width="8" />

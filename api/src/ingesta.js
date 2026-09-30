@@ -97,6 +97,42 @@ export const SERIES = [
     nombre: 'La Pantera Rosa', titulo: 'La Pantera Rosa', anio: 1969, canal: 'en-espanol', fuente: 'youtube',
     idioma: 'Español latino / sin diálogos', oficial: { channelId: 'UCM99Js1M2trMUwllNf7Ep7A' }, minSeg: 300, maxSeg: 1500,
   },
+  // En español, de los 90 a 2007: canales OFICIALES de sus productoras (nombre del canal
+  // "Canal Oficial", "OFICIAL" o de la productora: WildBrain, Xilam...).
+  {
+    nombre: 'Peppa Pig', anio: 2004, canal: 'en-espanol', fuente: 'youtube', idioma: 'Español',
+    oficial: { channelId: 'UCBErs5AlvBpzKfVRNj9ogAQ' }, minSeg: 240, maxSeg: 900,
+  },
+  {
+    nombre: 'Caillou Espana', titulo: 'Caillou (España)', anio: 1997, canal: 'en-espanol', fuente: 'youtube',
+    idioma: 'Español (España)', oficial: { handle: '@CaillouEspanolCastellano' }, minSeg: 240, maxSeg: 1800,
+  },
+  {
+    nombre: 'Caillou Latino', titulo: 'Caillou (Latino)', anio: 1997, canal: 'en-espanol', fuente: 'youtube',
+    idioma: 'Español latino', oficial: { channelId: 'UCCzR0RTeFKJr-kcwADUlSnw' }, minSeg: 240, maxSeg: 1800,
+  },
+  {
+    nombre: 'Totally Spies Espana', titulo: 'Totally Spies! (España)', anio: 2001, canal: 'en-espanol',
+    fuente: 'youtube', idioma: 'Español (España)', oficial: { channelId: 'UCCvPFhfn1abfSFCl-WjgaBQ' },
+    minSeg: 900, maxSeg: 1800,
+  },
+  {
+    nombre: 'Totally Spies Latino', titulo: 'Tres espías sin límite (Latino)', anio: 2001, canal: 'en-espanol',
+    fuente: 'youtube', idioma: 'Español latino', oficial: { channelId: 'UCPKJ7VUetpOmRVT7J6Cx87Q' },
+    minSeg: 900, maxSeg: 1800,
+  },
+  {
+    nombre: 'Codigo Lyoko', titulo: 'Código Lyoko', anio: 2003, canal: 'en-espanol', fuente: 'youtube',
+    idioma: 'Español (España)', oficial: { handle: '@CodeLyokoESP' }, minSeg: 900, maxSeg: 1800,
+  },
+  {
+    nombre: 'Oggy y las cucarachas', anio: 1998, canal: 'en-espanol', fuente: 'youtube', idioma: 'Sin diálogos',
+    oficial: { channelId: 'UCcK5THtxSZXBYxahuzRnX_w' }, minSeg: 300, maxSeg: 1500,
+  },
+  {
+    nombre: 'Barbapapa', titulo: 'Barbapapá', anio: 1974, canal: 'en-espanol', fuente: 'youtube', idioma: 'Español',
+    oficial: { handle: '@Barbapapa-CanalOficial' }, minSeg: 240, maxSeg: 900,
+  },
   // Clasicos: cortos en dominio publico en EE. UU. (1950+), version original, Internet Archive
   {
     nombre: 'Popeye clasicos', titulo: 'Popeye el marino (clásicos 1952-1957)', anio: 1952, canal: 'clasicos',

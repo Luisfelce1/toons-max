@@ -108,6 +108,12 @@ directos y clips) y verifica que cada video sea del propio canal:
 | Érase una vez... el hombre / la vida | `@eraseunavezchannel` (Hello Maestro) | Español |
 | Pingu | `@Pingu` | Sin diálogos |
 | La Pantera Rosa | "Official Pink Panther Latinoamerica" | Latino / sin diálogos |
+| Peppa Pig (2004) | "Peppa Pig Español - Canal Oficial" | Español |
+| Caillou (1997) | `@CaillouEspanolCastellano` y "Caillou Español - WildBrain" | España / Latino |
+| Totally Spies! (2001) | "Totally Spies! España" y "Tres Espías Sin Límite - Totally Spies" | España / Latino |
+| Código Lyoko (2003) | `@CodeLyokoESP` ("Código Lyoko Castellano Oficial") | Español (España) |
+| Oggy y las cucarachas (1998) | "Oggy y las cucarachas" (Xilam) | Sin diálogos |
+| Barbapapá | `@Barbapapa-CanalOficial` | Español |
 
 ### Canal "Clásicos" (dominio publico, 1950+)
 
