@@ -12,6 +12,7 @@
     "migrate": "npm run migrate --prefix api",
     "seed": "npm run seed --prefix api",
     "ingesta": "npm run ingesta --prefix api",
+    "ingesta:videos": "npm run ingesta:videos --prefix api",
     "build": "npm run build --prefix web",
     "start": "npm start --prefix api",
     "dev": "npm run dev --prefix api & npm run dev --prefix web",

@@ -3,6 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiService } from '../../api.service';
 import type { Episodio, SerieDetalle } from '../../models';
 import { IconComponent } from '../../shared/icon';
+import { PortadaComponent } from '../../shared/portada';
 import { UiNativeButton } from '../../ui/button';
 import { UiBadge } from '../../ui/badge';
 import { UiSkeleton } from '../../ui/skeleton';
@@ -14,6 +15,7 @@ import { agruparPorTemporada, primerEpisodioConVideo, tieneVideo } from '../../u
   imports: [
     RouterLink,
     IconComponent,
+    PortadaComponent,
     UiNativeButton,
     UiBadge,
     UiSkeleton,

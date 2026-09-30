@@ -36,7 +36,7 @@
       [value]="seleccion()"
       (valueChange)="onCanalChange($event)"
       aria-label="Elegir canal"
-      class="grid w-full grid-cols-3 gap-3 rounded-none border-0 bg-transparent p-0 shadow-none sm:grid-cols-5 lg:grid-cols-9"
+      class="grid w-full grid-cols-3 gap-3 rounded-none border-0 bg-transparent p-0 shadow-none sm:grid-cols-4 lg:grid-cols-6"
     >
       <ui-toggle-group-item [value]="TODOS" variant="channel" size="xl" style="--canal: var(--color-sunny)">
         <app-icon name="star" [size]="32" [filled]="true" />
@@ -118,13 +118,7 @@
               [style.rotate]="(i % 3 === 0 ? -1.5 : i % 3 === 1 ? 1 : 0) + 'deg'"
             >
               <div class="relative aspect-[2/3] w-full bg-muted">
-                @if (serie.poster) {
-                  <img [src]="serie.poster" alt="" class="size-full object-cover" loading="lazy" />
-                } @else {
-                  <div class="flex size-full items-center justify-center text-muted-foreground">
-                    <app-icon name="tv" [size]="56" />
-                  </div>
-                }
+                <app-portada [titulo]="serie.titulo" [slug]="serie.slug" [canal]="serie.canal_slug" class="size-full" />
                 <span
                   class="absolute right-2 top-2 flex size-14 items-center justify-center rounded-full border-4 border-ink bg-sunny text-ink opacity-90 shadow-sm transition-transform group-hover:scale-110"
                   aria-hidden="true"

@@ -43,6 +43,8 @@ export function createApp(env = process.env) {
           imgSrc: ["'self'", 'data:', 'https://static.tvmaze.com', 'https://cdn.myanimelist.net'],
           fontSrc: ["'self'"],
           connectSrc: ["'self'"],
+          // Cortos en dominio publico servidos desde Internet Archive (redirige a ia*.us.archive.org).
+          mediaSrc: ["'self'", 'https://archive.org', 'https://*.archive.org'],
           frameSrc: ["'self'", 'https://www.youtube-nocookie.com', 'https://www.youtube.com'],
           objectSrc: ["'none'"],
           baseUri: ["'self'"],
