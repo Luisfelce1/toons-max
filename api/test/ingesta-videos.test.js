@@ -6,6 +6,8 @@ import {
   resolverCanalOficial,
   listarVideosOficiales,
   runIngestaVideos,
+  duracionISO,
+  seleccionarEpisodiosCanal,
 } from '../src/ingesta-videos.js';
 
 const ep = (id, temporada, numero, titulo) => ({ id, temporada, numero, titulo });
@@ -110,5 +112,52 @@ describe('YouTube Data API', () => {
 
   it('exige YOUTUBE_API_KEY', async () => {
     await expect(runIngestaVideos({ series: [], apiKey: '' })).rejects.toThrow('YOUTUBE_API_KEY');
+  });
+});
+
+describe('duracionISO', () => {
+  it.each([
+    ['PT7M', 420],
+    ['PT1H2M3S', 3723],
+    ['PT45S', 45],
+    ['P0D', 0],
+    ['basura', 0],
+  ])('%s -> %i', (iso, seg) => {
+    expect(duracionISO(iso)).toBe(seg);
+  });
+});
+
+describe('seleccionarEpisodiosCanal', () => {
+  const v = (id, titulo, segundos, publicado) => ({ id, titulo, segundos, publicado });
+  const videos = [
+    v('bbbbbbbbbbb', 'Érase una vez... el hombre - Capítulo 2', 1500, '2019-02-01'),
+    v('aaaaaaaaaaa', 'Érase una vez... el hombre - Capítulo 1', 1500, '2019-01-01'),
+    v('ccccccccccc', 'Érase una vez... la vida - Capítulo 1', 1500, '2019-01-05'),
+    v('ddddddddddd', 'Érase una vez... el hombre | Recopilación 2 horas', 7200, '2019-03-01'),
+    v('eeeeeeeeeee', 'Érase una vez... el hombre (trailer)', 60, '2019-03-02'),
+  ];
+
+  it('filtra por titulo, duracion y recopilaciones, y numera por fecha', () => {
+    const eps = seleccionarEpisodiosCanal(videos, { filtro: 'el hombre', minSeg: 900, maxSeg: 2400 });
+    expect(eps.map((e) => [e.numero, e.youtube_id])).toEqual([
+      [1, 'aaaaaaaaaaa'],
+      [2, 'bbbbbbbbbbb'],
+    ]);
+    expect(eps[0]).toMatchObject({ temporada: 1, duracion: 25 });
+  });
+
+  it('acepta varios terminos en el filtro', () => {
+    const eps = seleccionarEpisodiosCanal(videos, { filtro: 'la vida|cuerpo humano', minSeg: 900, maxSeg: 2400 });
+    expect(eps.map((e) => e.youtube_id)).toEqual(['ccccccccccc']);
+  });
+});
+
+describe('resolverCanalOficial por channelId', () => {
+  it('usa el parametro id=', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      jsonRes({ items: [{ id: 'UCX', contentDetails: { relatedPlaylists: { uploads: 'UUX' } } }] }),
+    );
+    await resolverCanalOficial({ channelId: 'UCX' }, { apiKey: 'k', fetchImpl });
+    expect(fetchImpl.mock.calls[0][0]).toContain('id=UCX');
   });
 });

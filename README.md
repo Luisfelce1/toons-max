@@ -95,6 +95,28 @@ clips, trailers y recopilaciones, y verifica que el propietario del video sea es
 | El recreo, Oso en la casa azul | Solo Disney+ |
 | El mundo de Bobby | Sin fuente oficial verificada |
 
+### Canal "En español" (canales oficiales gratuitos)
+
+Series que sus propietarios publican completas y gratis en YouTube. `npm run ingesta:videos` crea
+la serie entera desde el canal (solo episodios completos por duracion; descarta recopilaciones,
+directos y clips) y verifica que cada video sea del propio canal:
+
+| Serie | Canal oficial | Idioma |
+|---|---|---|
+| Pocoyó | `@pocoyocapitulosenespanol` (Zinkia) | Español (España) |
+| La abeja Maya (clásica) | `AbejaMayaOficial` (Studio 100) | Español |
+| Érase una vez... el hombre / la vida | `@eraseunavezchannel` (Hello Maestro) | Español |
+| Pingu | `@Pingu` | Sin diálogos |
+| La Pantera Rosa | "Official Pink Panther Latinoamerica" | Latino / sin diálogos |
+
+### Canal "Clásicos" (dominio publico, 1950+)
+
+Cortos de Famous Studios que Wikipedia marca como **dominio publico en EE. UU.** (copyright no
+renovado), en **version original en inglés** desde Internet Archive (`npm run ingesta`, sin API key):
+13 de Popeye (1952-1957) y 2 de Casper (*Boo Moon*, *Spooking About Africa*). Los doblajes al
+español **no** se incluyen: son obras derivadas con derechos propios en España y Latinoamerica.
+La CSP permite `media-src https://archive.org https://*.archive.org` para reproducirlos.
+
 Las series sin fuente oficial quedan con su lista de episodios completa pero sin video (se
 muestran con candado). Puedes rellenar `youtube_id` a mano si encuentras un embed **oficial**.
 

@@ -29,6 +29,7 @@ describe('createApp', () => {
     expect(csp).toBeDefined();
     expect(csp).toContain("frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com");
     expect(csp).toContain("default-src 'self'");
+    expect(csp).toContain("media-src 'self' https://archive.org https://*.archive.org");
   });
 
   it('responds with a generic JSON error and no stack trace on unknown routes', async () => {

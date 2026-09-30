@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import { stripHtml, slugify } from './utils.js';
 import * as repo from './repo.js';
+import { CANALES } from './canales.js';
+import { resolverVideoArchive } from './archive.js';
 
 const TVMAZE_API = 'https://api.tvmaze.com';
 const JIKAN_SEARCH_URL = 'https://api.jikan.moe/v4/anime';
@@ -15,6 +17,12 @@ const JIKAN_WAIT_MS = 1000;
  * - `anio`: si no hay id, se busca por nombre y se exige que el estreno coincida con este año.
  * - `temporadas`: limita las temporadas a ingerir (p. ej. solo Mighty Morphin de Power Rangers).
  * - `oficial`: canal OFICIAL de YouTube del que `ingesta-videos` puede tomar episodios completos.
+ *
+ * Fuentes:
+ * - `tvmaze` / `jikan`: metadata; el video llega despues con `ingesta:videos`.
+ * - `youtube`: la serie entera sale de un canal OFICIAL en español (la gestiona `ingesta:videos`).
+ * - `archive`: cortos en DOMINIO PUBLICO en EE. UU. (Internet Archive), version original.
+ *   Solo titulos que Wikipedia marca como dominio publico; nunca doblajes (tienen sus propios derechos).
  */
 export const SERIES = [
   // Cartoon Network
@@ -62,6 +70,63 @@ export const SERIES = [
   { nombre: 'Arthur', anio: 1996, canal: 'otros', fuente: 'tvmaze' },
   { nombre: 'Garfield and Friends', anio: 1988, canal: 'otros', fuente: 'tvmaze' },
   { nombre: 'Captain Planet and the Planeteers', anio: 1990, canal: 'otros', fuente: 'tvmaze' },
+  // En español: series completas desde canales OFICIALES gratuitos (npm run ingesta:videos)
+  {
+    nombre: 'Pocoyo', titulo: 'Pocoyó', anio: 2005, canal: 'en-espanol', fuente: 'youtube', idioma: 'Español (España)',
+    oficial: { handle: '@pocoyocapitulosenespanol' }, minSeg: 240, maxSeg: 1800,
+  },
+  {
+    nombre: 'La abeja Maya', titulo: 'La abeja Maya (clásica)', anio: 1975, canal: 'en-espanol', fuente: 'youtube',
+    idioma: 'Español', oficial: { username: 'AbejaMayaOficial' }, minSeg: 600, maxSeg: 1800,
+  },
+  {
+    nombre: 'Erase una vez el hombre', titulo: 'Érase una vez... el hombre', anio: 1978, canal: 'en-espanol',
+    fuente: 'youtube', idioma: 'Español', oficial: { handle: '@eraseunavezchannel' }, filtro: 'el hombre',
+    minSeg: 900, maxSeg: 2400,
+  },
+  {
+    nombre: 'Erase una vez la vida', titulo: 'Érase una vez... la vida', anio: 1987, canal: 'en-espanol',
+    fuente: 'youtube', idioma: 'Español', oficial: { handle: '@eraseunavezchannel' }, filtro: 'la vida|cuerpo humano',
+    minSeg: 900, maxSeg: 2400,
+  },
+  {
+    nombre: 'Pingu', titulo: 'Pingu', anio: 1990, canal: 'en-espanol', fuente: 'youtube', idioma: 'Sin diálogos',
+    oficial: { handle: '@Pingu' }, minSeg: 240, maxSeg: 900,
+  },
+  {
+    nombre: 'La Pantera Rosa', titulo: 'La Pantera Rosa', anio: 1969, canal: 'en-espanol', fuente: 'youtube',
+    idioma: 'Español latino / sin diálogos', oficial: { channelId: 'UCM99Js1M2trMUwllNf7Ep7A' }, minSeg: 300, maxSeg: 1500,
+  },
+  // Clasicos: cortos en dominio publico en EE. UU. (1950+), version original, Internet Archive
+  {
+    nombre: 'Popeye clasicos', titulo: 'Popeye el marino (clásicos 1952-1957)', anio: 1952, canal: 'clasicos',
+    fuente: 'archive', idioma: 'Inglés (original)',
+    sinopsis: 'Cortos de Famous Studios en dominio publico en EE. UU. (copyright no renovado).',
+    episodios: [
+      ['Shuteye Popeye', 1952, 'popeye_shuteye_popeye'],
+      ['Big Bad Sindbad', 1952, 'popeye_big_bad_sinbad'],
+      ['Ancient Fistory', 1953, 'popeye_the_sailor_ancient_fantasy'],
+      ['Floor Flusher', 1954, 'Popeye_Floor_Flusher_1954'],
+      ['Taxi-Turvy', 1954, 'popeye_taxi-turvey'],
+      ['Bride and Gloom', 1954, 'Popeye_BrideandGloom'],
+      ['Greek Mirthology', 1954, 'Popeye_Greek_Mirthology_1954'],
+      ['Fright to the Finish', 1954, 'popeye_fright_to_the_finish'],
+      ['Private Eye Popeye', 1954, 'popeye_private_eye_popeye'],
+      ['Gopher Spinach', 1954, 'Popeye_Gopher_Spinach_1954'],
+      ["Cookin' with Gags", 1955, 'Popeye_Cooking_With_Gags_1954'],
+      ['Insect to Injury', 1956, 'insect_to_injury'],
+      ['Spree Lunch', 1957, 'spree_lunch'],
+    ],
+  },
+  {
+    nombre: 'Casper clasicos', titulo: 'Casper (clásicos)', anio: 1954, canal: 'clasicos', fuente: 'archive',
+    idioma: 'Inglés (original)',
+    sinopsis: 'Cortos de Famous Studios en dominio publico en EE. UU. (copyright no renovado).',
+    episodios: [
+      ['Boo Moon', 1954, 'casper-the-friendly-ghost-boo-moon-1953'],
+      ['Spooking About Africa', 1957, 'spooking-about-africa-1957'],
+    ],
+  },
   { nombre: 'Saint Seiya', canal: 'otros', fuente: 'jikan' },
   { nombre: 'Dragon Ball', canal: 'otros', fuente: 'jikan' },
 ];
@@ -184,6 +249,40 @@ async function ingestTvMaze(item, canalId, { fetchImpl }) {
   return serieId;
 }
 
+/** Texto de sinopsis con el idioma, que la app muestra en la ficha de la serie. */
+export function sinopsisConIdioma(item, sinopsis = item.sinopsis ?? '') {
+  return item.idioma ? `${sinopsis}${sinopsis ? ' ' : ''}Idioma: ${item.idioma}.`.trim() : sinopsis;
+}
+
+export async function ingestArchive(item, canalId, { fetchImpl }) {
+  const serieId = await repo.upsertSerie({
+    slug: slugSerie(item),
+    titulo: item.titulo ?? item.nombre,
+    anio: item.anio ?? null,
+    sinopsis: sinopsisConIdioma(item),
+    poster: null,
+    tipo: 'corto',
+    fuente: 'archive',
+    canal_id: canalId,
+  });
+  let numero = 0;
+  for (const [titulo, anio, identifier] of item.episodios) {
+    numero += 1;
+    const video = await resolverVideoArchive(identifier, { fetchImpl });
+    if (!video) console.warn(`Archive: "${identifier}" sin MP4, queda sin video.`);
+    await repo.upsertEpisodio({
+      serie_id: serieId,
+      temporada: 1,
+      numero,
+      titulo: `${titulo} (${anio})`,
+      duracion: video?.duracion ?? null,
+      resumen: `Corto original de ${anio} en dominio publico. Fuente: archive.org/details/${identifier}`,
+      video_url: video?.video_url ?? null,
+    });
+  }
+  return serieId;
+}
+
 async function ingestJikan(item, canalId, { fetchImpl, sleepImpl }) {
   const res = await fetchImpl(`${JIKAN_SEARCH_URL}?q=${encodeURIComponent(item.nombre)}&limit=1&order_by=members&sort=desc`);
   const json = await res.json();
@@ -199,6 +298,9 @@ async function ingestJikan(item, canalId, { fetchImpl, sleepImpl }) {
 }
 
 export async function runIngesta({ series = SERIES, fetchImpl = fetch, sleepImpl = defaultSleep } = {}) {
+  for (const canal of CANALES) {
+    await repo.upsertCanal(canal);
+  }
   for (const item of series) {
     const canal = await repo.getCanalBySlug(item.canal);
     if (!canal) {
@@ -210,7 +312,10 @@ export async function runIngesta({ series = SERIES, fetchImpl = fetch, sleepImpl
       await ingestTvMaze(item, canal.id, { fetchImpl });
     } else if (item.fuente === 'jikan') {
       await ingestJikan(item, canal.id, { fetchImpl, sleepImpl });
+    } else if (item.fuente === 'archive') {
+      await ingestArchive(item, canal.id, { fetchImpl });
     }
+    // `youtube`: lo gestiona ingesta-videos.js (necesita YOUTUBE_API_KEY).
   }
 }
 

@@ -2,16 +2,8 @@ import 'dotenv/config';
 import { slugify } from './utils.js';
 import * as repo from './repo.js';
 
-export const CANALES = [
-  { slug: 'cartoon-network', nombre: 'Cartoon Network' },
-  { slug: 'nickelodeon', nombre: 'Nickelodeon' },
-  { slug: 'fox-kids', nombre: 'Fox Kids' },
-  { slug: 'hanna-barbera', nombre: 'Hanna Barbera' },
-  { slug: 'disney', nombre: 'Disney' },
-  { slug: 'warner-channel', nombre: 'Warner Channel' },
-  { slug: 'marvel', nombre: 'Marvel' },
-  { slug: 'otros', nombre: 'Otros' },
-];
+export { CANALES } from './canales.js';
+import { CANALES } from './canales.js';
 
 export const SERIES_DEMO = [
   {

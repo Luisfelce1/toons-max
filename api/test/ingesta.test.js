@@ -94,8 +94,18 @@ describe('SERIES catalog', () => {
   it('has unique slugs and only official YouTube sources', () => {
     const slugs = SERIES.map(slugSerie);
     expect(new Set(slugs).size).toBe(slugs.length);
+    for (const s of SERIES.filter((x) => x.fuente === 'youtube')) {
+      expect(s.oficial, `${s.nombre} necesita canal oficial`).toBeTruthy();
+    }
+    for (const s of SERIES.filter((x) => x.fuente === 'archive')) {
+      expect(s.canal).toBe('clasicos');
+      for (const [, anio, id] of s.episodios) {
+        expect(anio).toBeGreaterThanOrEqual(1950);
+        expect(id).toMatch(/^[A-Za-z0-9._-]+$/);
+      }
+    }
     for (const s of SERIES.filter((x) => x.oficial)) {
-      expect(s.oficial.handle || s.oficial.username).toBeTruthy();
+      expect(s.oficial.handle || s.oficial.username || s.oficial.channelId).toBeTruthy();
     }
   });
 });
@@ -238,5 +248,30 @@ describe('runIngesta (idempotent, integration)', () => {
     const [episodio] = await repo.listEpisodiosBySerie(rows[0].id);
     expect(episodio.youtube_id).toBe('aqz-KE-bpKQ');
     expect(rows[0].poster).toBeNull();
+  });
+
+  it('ingests public-domain shorts from Internet Archive with https video urls', async () => {
+    const fetchImpl = vi.fn().mockImplementation(async (url) => ({
+      ok: true,
+      json: async () => ({ files: [{ name: `${String(url).split('/').pop()}.mp4`, format: 'h.264', length: '400' }] }),
+    }));
+    const clasicos = [
+      {
+        nombre: 'Popeye clasicos', titulo: 'Popeye (clasicos)', anio: 1952, canal: 'clasicos', fuente: 'archive',
+        idioma: 'Ingles (original)', episodios: [['Spree Lunch', 1957, 'spree_lunch']],
+      },
+    ];
+    await runIngesta({ series: clasicos, fetchImpl });
+    await runIngesta({ series: clasicos, fetchImpl });
+
+    const { series: rows } = await repo.listSeries({ canal: 'clasicos' });
+    expect(rows).toHaveLength(1);
+    const episodios = await repo.listEpisodiosBySerie(rows[0].id);
+    expect(episodios).toHaveLength(1);
+    expect(episodios[0]).toMatchObject({
+      titulo: 'Spree Lunch (1957)',
+      duracion: 7,
+      video_url: 'https://archive.org/download/spree_lunch/spree_lunch.mp4',
+    });
   });
 });

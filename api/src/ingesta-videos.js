@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import * as repo from './repo.js';
-import { SERIES, slugSerie } from './ingesta.js';
+import { SERIES, slugSerie, sinopsisConIdioma } from './ingesta.js';
 
 /*
  * Rellena `youtube_id` SOLO con videos subidos por el canal OFICIAL de cada serie
@@ -87,9 +87,11 @@ async function getJson(fetchImpl, url) {
 
 /** Devuelve { channelId, uploads } del canal oficial indicado por handle o username. */
 export async function resolverCanalOficial(oficial, { apiKey, fetchImpl }) {
-  const param = oficial.handle
-    ? `forHandle=${encodeURIComponent(oficial.handle)}`
-    : `forUsername=${encodeURIComponent(oficial.username)}`;
+  const param = oficial.channelId
+    ? `id=${encodeURIComponent(oficial.channelId)}`
+    : oficial.handle
+      ? `forHandle=${encodeURIComponent(oficial.handle)}`
+      : `forUsername=${encodeURIComponent(oficial.username)}`;
   const json = await getJson(fetchImpl, `${YT_API}/channels?part=contentDetails&${param}&key=${apiKey}`);
   const canal = json.items?.[0];
   if (!canal) return null;
@@ -109,12 +111,78 @@ export async function listarVideosOficiales({ channelId, uploads }, { apiKey, fe
       const sn = item.snippet ?? {};
       const owner = sn.videoOwnerChannelId ?? sn.channelId;
       if (owner === channelId && sn.resourceId?.videoId) {
-        videos.push({ id: sn.resourceId.videoId, titulo: sn.title });
+        videos.push({ id: sn.resourceId.videoId, titulo: sn.title, publicado: sn.publishedAt ?? '' });
       }
     }
     pageToken = json.nextPageToken ?? '';
   } while (pageToken);
   return videos;
+}
+
+/** "PT1H2M3S" -> 3723 segundos. */
+export function duracionISO(iso) {
+  const m = String(iso ?? '').match(/^P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
+  if (!m) return 0;
+  const [, d, h, min, seg] = m.map((x) => Number(x ?? 0));
+  return d * 86400 + h * 3600 + min * 60 + seg;
+}
+
+/** Añade la duracion (segundos) a cada video, en lotes de 50 (limite de la API). */
+export async function añadirDuraciones(videos, { apiKey, fetchImpl }) {
+  const duraciones = new Map();
+  for (let i = 0; i < videos.length; i += 50) {
+    const ids = videos.slice(i, i + 50).map((v) => v.id).join(',');
+    const json = await getJson(fetchImpl, `${YT_API}/videos?part=contentDetails&id=${ids}&key=${apiKey}`);
+    for (const item of json.items ?? []) {
+      duraciones.set(item.id, duracionISO(item.contentDetails?.duration));
+    }
+  }
+  return videos.map((v) => ({ ...v, segundos: duraciones.get(v.id) ?? 0 }));
+}
+
+/**
+ * Serie que sale entera de un canal oficial: se queda con los episodios completos
+ * (duracion entre minSeg y maxSeg, sin recopilaciones ni clips), opcionalmente filtrados
+ * por `filtro` en el titulo, y los numera por orden de publicacion.
+ */
+export function seleccionarEpisodiosCanal(videos, { filtro, minSeg = 240, maxSeg = 1800 } = {}) {
+  const reFiltro = filtro ? new RegExp(filtro.split('|').map(normalizar).join('|')) : null;
+  return videos
+    .filter((v) => esEpisodioCompleto(v.titulo) && !/\b(recopilacion|mix|minutos|horas|hours|marathon|maraton|directo|live|en vivo)\b/.test(normalizar(v.titulo)))
+    .filter((v) => v.segundos >= minSeg && v.segundos <= maxSeg)
+    .filter((v) => !reFiltro || reFiltro.test(normalizar(v.titulo)))
+    .sort((a, b) => String(a.publicado).localeCompare(String(b.publicado)))
+    .map((v, i) => ({
+      temporada: 1,
+      numero: i + 1,
+      titulo: v.titulo,
+      duracion: Math.max(1, Math.round(v.segundos / 60)),
+      youtube_id: v.id,
+    }));
+}
+
+async function ingestaSerieYoutube(item, canal, { apiKey, fetchImpl }) {
+  const canalApp = await repo.getCanalBySlug(item.canal);
+  if (!canalApp) {
+    console.warn(`Canal de la app "${item.canal}" no existe; ejecuta antes npm run ingesta.`);
+    return null;
+  }
+  const videos = await añadirDuraciones(await listarVideosOficiales(canal, { apiKey, fetchImpl }), { apiKey, fetchImpl });
+  const episodios = seleccionarEpisodiosCanal(videos, item);
+  const serieId = await repo.upsertSerie({
+    slug: slugSerie(item),
+    titulo: item.titulo ?? item.nombre,
+    anio: item.anio ?? null,
+    sinopsis: sinopsisConIdioma(item, 'Episodios completos del canal oficial en YouTube.'),
+    poster: null,
+    tipo: 'tv',
+    fuente: 'youtube',
+    canal_id: canalApp.id,
+  });
+  for (const ep of episodios) {
+    await repo.upsertEpisodio({ ...ep, resumen: null, serie_id: serieId });
+  }
+  return { serie: item.nombre, episodios: episodios.length, conVideo: episodios.length };
 }
 
 export async function runIngestaVideos({ series = SERIES, apiKey = process.env.YOUTUBE_API_KEY, fetchImpl = fetch } = {}) {
@@ -126,6 +194,11 @@ export async function runIngestaVideos({ series = SERIES, apiKey = process.env.Y
     const canal = await resolverCanalOficial(item.oficial, { apiKey, fetchImpl });
     if (!canal) {
       console.warn(`Canal oficial no encontrado para "${item.nombre}", se omite.`);
+      continue;
+    }
+    if (item.fuente === 'youtube') {
+      const fila = await ingestaSerieYoutube(item, canal, { apiKey, fetchImpl });
+      if (fila) resumen.push(fila);
       continue;
     }
     const serie = await repo.getSerieBySlug(slugSerie(item));
