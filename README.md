@@ -26,7 +26,7 @@ desde una unica URL.
 
 | Capa | Tecnologia |
 |---|---|
-| API | Node 22, Express 4 (ESM), `mysql2` (prepared statements) |
+| API | Node 22, Express 5 (ESM), `mysql2` (prepared statements) |
 | Base de datos | MySQL 8 / MariaDB 11, InnoDB, `utf8mb4` |
 | Validacion | zod |
 | Seguridad | helmet, express-rate-limit, clave familiar con comparacion de tiempo constante |
@@ -278,6 +278,59 @@ npm run test:watch  # api en modo watch
 dependencias de `api/` y `web/`, aplica la migracion contra la base de test, corre ambas
 suites y compila la web. El pull request no deberia poder mergearse si esta suite no esta en
 verde (configura la proteccion de rama en GitHub para exigir este check).
+
+## Despliegue en Cloudflare (Workers + Hyperdrive + Aiven, gratis)
+
+API (Express 5) y web Angular en **una sola URL** de Cloudflare Workers. La base es una MySQL
+**gratuita para siempre** de Aiven, a la que el Worker llega por **Hyperdrive**.
+
+**Requisitos:** Node ≥ 22.22.3 (o 24), cuenta gratuita de Cloudflare y de Aiven.
+
+### 1. Base de datos en Aiven (plan Free)
+1. En la consola de Aiven: **Create service → MySQL → plan Free** (comprueba que el coste es 0 $).
+2. Cuando este en *Running*, en **Overview** copia la **Service URI** y descarga el **CA certificate**.
+3. Guarda el certificado como `api/ca.pem` y crea `api/.env` (ambos ignorados por git):
+   ```
+   DATABASE_URL=mysql://avnadmin:CONTRASEÑA@mysql-xxxx.aivencloud.com:PUERTO/defaultdb
+   DB_SSL_CA=./ca.pem
+   FAMILY_KEY=la-clave-familiar
+   YOUTUBE_API_KEY=            # opcional, para ingesta:videos
+   ```
+4. Crea las tablas y carga el catalogo desde tu ordenador:
+   ```bash
+   npm run migrate --prefix api
+   npm run ingesta --prefix api          # series, episodios y clasicos de dominio publico
+   npm run ingesta:videos --prefix api   # opcional: episodios de canales oficiales
+   ```
+
+### 2. Hyperdrive
+```bash
+cd api
+npx wrangler login
+npx wrangler hyperdrive create retrotoons-db --connection-string="mysql://avnadmin:CONTRASEÑA@mysql-xxxx.aivencloud.com:PUERTO/defaultdb"
+```
+Copia el `id` que devuelve en `api/wrangler.jsonc` (`"id": "PON_AQUI_EL_ID_DE_HYPERDRIVE"`).
+
+### 3. Secreto y despliegue
+```bash
+npx wrangler secret put FAMILY_KEY     # escribe la clave familiar
+npm run cf:deploy                      # compila Angular y despliega el Worker
+```
+Wrangler te dara la URL `https://retrotoons.<tu-subdominio>.workers.dev`.
+
+### Probar el Worker en local
+```bash
+cd api
+printf 'FAMILY_KEY=demo\n' > .dev.vars
+export CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE=mysql://retrotoons:retrotoons@127.0.0.1:3306/retrotoons_dev
+npm run build --prefix ../web && npm run cf:dev
+```
+
+**Como funciona:** `api/src/worker.js` es la entrada en Workers; la web la sirve `assets` y solo
+`/api/*` llega a Express. Cada peticion abre su propio pool contra Hyperdrive (`disableEval`,
+exigido por Workers) y lo cierra al terminar. Fuera de Workers (`npm start`, scripts, tests) se
+usa el pool normal, con SSL si hay `DB_SSL_CA`. Los contadores de `express-rate-limit` viven en
+memoria de cada instancia: suficiente para uso familiar, no es un limite global exacto.
 
 ## Despliegue (Railway)
 

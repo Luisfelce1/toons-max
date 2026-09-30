@@ -1,0 +1,33 @@
+{
+  // Cloudflare Workers: API (Express) + web Angular en una sola URL.
+  // Guia completa: README.md -> "Despliegue en Cloudflare".
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "retrotoons",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // La app Angular compilada (npm run build --prefix web). Todo lo que no sea /api/*
+  // lo sirve Cloudflare directamente; las rutas de Angular caen en index.html.
+  "assets": {
+    "directory": "../web/dist/web/browser",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+
+  // Conexion a la MySQL de Aiven a traves de Hyperdrive.
+  // Sustituye el id por el que devuelve: npx wrangler hyperdrive create retrotoons-db --connection-string="mysql://..."
+  // Para `wrangler dev` en local, define CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE.
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "PON_AQUI_EL_ID_DE_HYPERDRIVE"
+    }
+  ],
+
+  "vars": {
+    "NODE_ENV": "production"
+  },
+
+  "observability": { "enabled": true }
+}
