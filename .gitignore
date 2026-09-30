@@ -6,3 +6,6 @@ dist/
 coverage/
 .DS_Store
 web/dist/
+
+# Secretos locales (certificados de la base de datos)
+*.pem
