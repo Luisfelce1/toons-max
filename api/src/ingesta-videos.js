@@ -161,14 +161,10 @@ export function seleccionarEpisodiosCanal(videos, { filtro, minSeg = 240, maxSeg
     }));
 }
 
-async function ingestaSerieYoutube(item, canal, { apiKey, fetchImpl }) {
-  const canalApp = await repo.getCanalBySlug(item.canal);
-  if (!canalApp) {
-    console.warn(`Canal de la app "${item.canal}" no existe; ejecuta antes npm run ingesta.`);
-    return null;
-  }
-  const videos = await añadirDuraciones(await listarVideosOficiales(canal, { apiKey, fetchImpl }), { apiKey, fetchImpl });
+/** Guarda una serie (y sus episodios) a partir de videos ya descargados del canal oficial. */
+async function guardarSerieYoutube(item, videos, canalApp) {
   const episodios = seleccionarEpisodiosCanal(videos, item);
+  if (episodios.length === 0) return { serie: item.nombre, episodios: 0, conVideo: 0 };
   const serieId = await repo.upsertSerie({
     slug: slugSerie(item),
     titulo: item.titulo ?? item.nombre,
@@ -185,6 +181,69 @@ async function ingestaSerieYoutube(item, canal, { apiKey, fetchImpl }) {
   return { serie: item.nombre, episodios: episodios.length, conVideo: episodios.length };
 }
 
+async function canalDeLaApp(slug) {
+  const canalApp = await repo.getCanalBySlug(slug);
+  if (!canalApp) console.warn(`Canal de la app "${slug}" no existe; ejecuta antes npm run ingesta.`);
+  return canalApp;
+}
+
+async function ingestaSerieYoutube(item, canal, { apiKey, fetchImpl }) {
+  const canalApp = await canalDeLaApp(item.canal);
+  if (!canalApp) return null;
+  const videos = await añadirDuraciones(await listarVideosOficiales(canal, { apiKey, fetchImpl }), { apiKey, fetchImpl });
+  return guardarSerieYoutube(item, videos, canalApp);
+}
+
+/**
+ * Canal oficial con VARIAS series (p. ej. Treehouse Direct: Franklin, Pequeño Oso...).
+ * Cada video va a la primera serie cuyo `patron` aparece en su titulo; el resto se ignora.
+ * Devuelve { porSerie: Map(nombre -> videos), sinClasificar: videos[] }.
+ */
+export function repartirPorSerie(videos, subseries) {
+  // patron '*' = resto del canal (debe ir la ultima).
+  const reglas = subseries.map((sub) => ({
+    nombre: sub.nombre,
+    re:
+      sub.patron === '*'
+        ? /./
+        : new RegExp(`(^| )(${sub.patron.split('|').map((p) => normalizar(p)).filter(Boolean).join('|')})( |$)`),
+  }));
+  const porSerie = new Map(subseries.map((sub) => [sub.nombre, []]));
+  const sinClasificar = [];
+  for (const v of videos) {
+    const titulo = normalizar(v.titulo);
+    const regla = reglas.find((r) => r.re.test(titulo));
+    if (regla) porSerie.get(regla.nombre).push(v);
+    else sinClasificar.push(v);
+  }
+  return { porSerie, sinClasificar };
+}
+
+async function ingestaCanalMultiserie(item, canal, { apiKey, fetchImpl }) {
+  const videos = await añadirDuraciones(await listarVideosOficiales(canal, { apiKey, fetchImpl }), { apiKey, fetchImpl });
+  const { porSerie, sinClasificar } = repartirPorSerie(videos, item.series);
+  const filas = [];
+  for (const sub of item.series) {
+    const subItem = {
+      idioma: item.idioma,
+      canal: item.canal,
+      minSeg: item.minSeg,
+      maxSeg: item.maxSeg,
+      ...sub,
+      filtro: undefined,
+    };
+    const canalApp = await canalDeLaApp(subItem.canal);
+    if (!canalApp) continue;
+    filas.push(await guardarSerieYoutube(subItem, porSerie.get(sub.nombre), canalApp));
+  }
+  if (sinClasificar.length) {
+    // Ayuda para ampliar el catalogo: titulos del canal que no son de ninguna serie conocida.
+    console.log(`\n[${item.nombre}] ${sinClasificar.length} videos sin serie asignada. Ejemplos:`);
+    for (const v of sinClasificar.slice(0, 15)) console.log(`  - ${v.titulo}`);
+  }
+  return filas;
+}
+
 export async function runIngestaVideos({ series = SERIES, apiKey = process.env.YOUTUBE_API_KEY, fetchImpl = fetch } = {}) {
   if (!apiKey) {
     throw new Error('Falta YOUTUBE_API_KEY (YouTube Data API v3) en api/.env');
@@ -194,6 +253,10 @@ export async function runIngestaVideos({ series = SERIES, apiKey = process.env.Y
     const canal = await resolverCanalOficial(item.oficial, { apiKey, fetchImpl });
     if (!canal) {
       console.warn(`Canal oficial no encontrado para "${item.nombre}", se omite.`);
+      continue;
+    }
+    if (item.fuente === 'youtube-multi') {
+      resumen.push(...(await ingestaCanalMultiserie(item, canal, { apiKey, fetchImpl })));
       continue;
     }
     if (item.fuente === 'youtube') {

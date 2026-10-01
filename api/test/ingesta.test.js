@@ -97,6 +97,16 @@ describe('SERIES catalog', () => {
     for (const s of SERIES.filter((x) => x.fuente === 'youtube')) {
       expect(s.oficial, `${s.nombre} necesita canal oficial`).toBeTruthy();
     }
+    const todas = [...SERIES, ...SERIES.filter((x) => x.fuente === 'youtube-multi').flatMap((x) => x.series)];
+    const slugsTodas = todas.map(slugSerie);
+    expect(new Set(slugsTodas).size).toBe(slugsTodas.length);
+    for (const s of SERIES.filter((x) => x.fuente === 'youtube-multi')) {
+      expect(s.oficial, `${s.nombre} necesita canal oficial`).toBeTruthy();
+      expect(s.series.length).toBeGreaterThan(0);
+      for (const sub of s.series) expect(sub.patron).toBeTruthy();
+      // '*' solo puede ir al final
+      expect(s.series.slice(0, -1).some((sub) => sub.patron === '*')).toBe(false);
+    }
     for (const s of SERIES.filter((x) => x.fuente === 'archive')) {
       expect(s.canal).toBe('clasicos');
       for (const [, anio, id] of s.episodios) {

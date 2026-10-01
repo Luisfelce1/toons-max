@@ -21,6 +21,8 @@ const JIKAN_WAIT_MS = 1000;
  * Fuentes:
  * - `tvmaze` / `jikan`: metadata; el video llega despues con `ingesta:videos`.
  * - `youtube`: la serie entera sale de un canal OFICIAL en español (la gestiona `ingesta:videos`).
+ * - `youtube-multi`: canal OFICIAL con varias series; `series[].patron` reparte los videos
+ *   por titulo (palabras separadas por |, '*' = el resto del canal).
  * - `archive`: cortos en DOMINIO PUBLICO en EE. UU. (Internet Archive), version original.
  *   Solo titulos que Wikipedia marca como dominio publico; nunca doblajes (tienen sus propios derechos).
  */
@@ -132,6 +134,55 @@ export const SERIES = [
   {
     nombre: 'Barbapapa', titulo: 'Barbapapá', anio: 1974, canal: 'en-espanol', fuente: 'youtube', idioma: 'Español',
     oficial: { handle: '@Barbapapa-CanalOficial' }, minSeg: 240, maxSeg: 900,
+  },
+  // Canales oficiales con VARIAS series (fuente 'youtube-multi'): cada video se asigna a la
+  // serie cuyo `patron` (palabras separadas por |) aparece en su titulo.
+  {
+    nombre: 'Treehouse Direct Latam', canal: 'en-espanol', fuente: 'youtube-multi', idioma: 'Español latino',
+    oficial: { handle: '@treehousedirectlatam' }, minSeg: 240, maxSeg: 1800,
+    series: [
+      { nombre: 'Franklin Latino', titulo: 'Franklin (Latino)', anio: 1997, patron: 'franklin' },
+      { nombre: 'Pequeno Oso', titulo: 'Pequeño Oso', anio: 1995, patron: 'pequeno oso|osito|little bear' },
+      { nombre: 'Max y Ruby', titulo: 'Max y Ruby', anio: 2002, patron: 'max y ruby|max and ruby|max ruby' },
+      { nombre: 'Babar', titulo: 'Babar', anio: 1989, patron: 'babar' },
+      { nombre: 'Caillou Treehouse', titulo: 'Caillou (Treehouse)', anio: 1997, patron: 'caillou' },
+      { nombre: 'Rolie Polie Olie', titulo: 'Rolie Polie Olie', anio: 1998, patron: 'rolie polie|olie' },
+      { nombre: 'Miss Spider', titulo: 'La señorita Araña', anio: 2004, patron: 'miss spider|senorita arana|arana' },
+      { nombre: 'Corduroy', titulo: 'Corduroy', anio: 2000, patron: 'corduroy|pana' },
+    ],
+  },
+  {
+    nombre: 'Power Rangers Ninos', canal: 'en-espanol', fuente: 'youtube-multi', idioma: 'Español',
+    oficial: { handle: '@powerrangersninosoficial' }, minSeg: 900, maxSeg: 1800,
+    series: [
+      { nombre: 'Power Rangers Mighty Morphin ES', titulo: 'Power Rangers: Mighty Morphin', anio: 1993, patron: 'mighty morphin|mmpr' },
+      { nombre: 'Power Rangers Zeo ES', titulo: 'Power Rangers Zeo', anio: 1996, patron: 'zeo' },
+      { nombre: 'Power Rangers Turbo ES', titulo: 'Power Rangers Turbo', anio: 1997, patron: 'turbo' },
+      { nombre: 'Power Rangers en el Espacio', titulo: 'Power Rangers en el Espacio', anio: 1998, patron: 'en el espacio|in space' },
+      { nombre: 'Power Rangers Galaxia Perdida', titulo: 'Power Rangers: Galaxia Perdida', anio: 1999, patron: 'galaxia perdida|lost galaxy' },
+      { nombre: 'Power Rangers Lightspeed Rescue', titulo: 'Power Rangers: Lightspeed Rescue', anio: 2000, patron: 'lightspeed|rescate' },
+      { nombre: 'Power Rangers Fuerza del Tiempo', titulo: 'Power Rangers: Fuerza del Tiempo', anio: 2001, patron: 'fuerza del tiempo|time force' },
+      { nombre: 'Power Rangers Fuerza Salvaje', titulo: 'Power Rangers: Fuerza Salvaje', anio: 2002, patron: 'fuerza salvaje|wild force' },
+      { nombre: 'Power Rangers Tormenta Ninja', titulo: 'Power Rangers: Tormenta Ninja', anio: 2003, patron: 'tormenta ninja|ninja storm' },
+      { nombre: 'Power Rangers Dino Trueno', titulo: 'Power Rangers: Dino Trueno', anio: 2004, patron: 'dino trueno|dino thunder' },
+      { nombre: 'Power Rangers SPD', titulo: 'Power Rangers: S.P.D.', anio: 2005, patron: 'spd|s p d' },
+      { nombre: 'Power Rangers Fuerza Mistica', titulo: 'Power Rangers: Fuerza Mística', anio: 2006, patron: 'fuerza mistica|mystic force' },
+      { nombre: 'Power Rangers Operacion Sobrecarga', titulo: 'Power Rangers: Operación Sobrecarga', anio: 2007, patron: 'operacion sobrecarga|operation overdrive' },
+      { nombre: 'Power Rangers Dino Charge', titulo: 'Power Rangers: Dino Charge', anio: 2015, patron: 'dino charge|dino super charge' },
+      { nombre: 'Power Rangers Otras', titulo: 'Power Rangers (otras temporadas)', anio: null, patron: 'power rangers' },
+    ],
+  },
+  {
+    nombre: 'El Autobus Magico ES', canal: 'en-espanol', fuente: 'youtube-multi', idioma: 'Español latino',
+    oficial: { handle: '@elautobusmagicoenespanol' }, minSeg: 600, maxSeg: 1800,
+    series: [
+      {
+        nombre: 'El Autobus Magico Vuelve a Despegar', titulo: 'El autobús mágico vuelve a despegar', anio: 2017,
+        patron: 'vuelve a despegar|rides again',
+      },
+      // Sin patron especifico: todo lo demas del canal es la serie clasica.
+      { nombre: 'El Autobus Magico Clasico', titulo: 'El autobús mágico', anio: 1994, patron: '*' },
+    ],
   },
   // Clasicos: cortos en dominio publico en EE. UU. (1950+), version original, Internet Archive
   {

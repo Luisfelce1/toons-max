@@ -35,10 +35,20 @@ export type Motivo =
   | 'cometa'
   | 'lupa'
   | 'ordenador'
-  | 'bicho';
+  | 'bicho'
+  | 'oso'
+  | 'conejo'
+  | 'corona';
 
 /** Palabras clave (sin acentos, minusculas) -> motivo. La primera que coincide gana. */
 const REGLAS: ReadonlyArray<readonly [string, Motivo]> = [
+  ['pequeno oso', 'oso'],
+  ['little bear', 'oso'],
+  ['corduroy', 'oso'],
+  ['max y ruby', 'conejo'],
+  ['babar', 'corona'],
+  ['senorita arana', 'telarana'],
+  ['miss spider', 'telarana'],
   ['power rangers', 'rayo'],
   ['rocket power', 'patineta'],
   ['magic school bus', 'autobus'],

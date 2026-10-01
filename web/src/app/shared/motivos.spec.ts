@@ -23,6 +23,12 @@ describe('motivoPara', () => {
     ['Código Lyoko', 'ordenador'],
     ['Oggy y las cucarachas', 'bicho'],
     ['Barbapapá', 'nube'],
+    ['Pequeño Oso', 'oso'],
+    ['Max y Ruby', 'conejo'],
+    ['Babar', 'corona'],
+    ['Franklin (Latino)', 'tortuga'],
+    ['Power Rangers: Fuerza Mística', 'rayo'],
+    ['El autobús mágico vuelve a despegar', 'autobus'],
   ])('%s -> %s', (titulo, esperado) => {
     expect(motivoPara(titulo)).toBe(esperado);
   });

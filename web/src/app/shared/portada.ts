@@ -280,6 +280,36 @@ interface Forma {
                 <circle cx="-4" cy="-21" r="2.5" fill="#fff" stroke="none" />
                 <circle cx="4" cy="-21" r="2.5" fill="#fff" stroke="none" />
               }
+              @case ('oso') {
+                <circle cx="-20" cy="-20" r="10" fill="#a8693a" />
+                <circle cx="20" cy="-20" r="10" fill="#a8693a" />
+                <circle cx="-20" cy="-20" r="4" fill="#e8b58a" stroke="none" />
+                <circle cx="20" cy="-20" r="4" fill="#e8b58a" stroke="none" />
+                <circle cx="0" cy="2" r="28" fill="#a8693a" />
+                <ellipse cx="0" cy="12" rx="13" ry="10" fill="#e8b58a" />
+                <ellipse cx="0" cy="7" rx="5" ry="3.5" [attr.fill]="ink" stroke="none" />
+                <path d="M0 10 V15 M-5 17 Q0 21 5 17" fill="none" stroke-width="2.5" />
+                <circle cx="-10" cy="-6" r="3" [attr.fill]="ink" stroke="none" />
+                <circle cx="10" cy="-6" r="3" [attr.fill]="ink" stroke="none" />
+              }
+              @case ('conejo') {
+                <ellipse cx="-11" cy="-22" rx="7" ry="18" fill="#fff" transform="rotate(-10 -11 -22)" />
+                <ellipse cx="11" cy="-22" rx="7" ry="18" fill="#fff" transform="rotate(10 11 -22)" />
+                <ellipse cx="-11" cy="-22" rx="3" ry="11" fill="#ffb3d1" stroke="none" transform="rotate(-10 -11 -22)" />
+                <ellipse cx="11" cy="-22" rx="3" ry="11" fill="#ffb3d1" stroke="none" transform="rotate(10 11 -22)" />
+                <circle cx="0" cy="12" r="22" fill="#fff" />
+                <circle cx="-8" cy="7" r="3" [attr.fill]="ink" stroke="none" />
+                <circle cx="8" cy="7" r="3" [attr.fill]="ink" stroke="none" />
+                <path d="M-3 15 L3 15 L0 19 Z" fill="#ff4fa3" stroke-width="2" />
+                <path d="M-14 20 h-12 M-14 24 h-11 M14 20 h12 M14 24 h11" stroke-width="2" />
+              }
+              @case ('corona') {
+                <path d="M-32 22 L-32 -14 L-16 4 L0 -24 L16 4 L32 -14 L32 22 Z" fill="#ffd400" />
+                <rect x="-34" y="20" width="68" height="10" rx="3" fill="#ffd400" />
+                <circle cx="0" cy="8" r="5" fill="#e53935" stroke-width="2.5" />
+                <circle cx="-19" cy="12" r="4" fill="#3ec7ff" stroke-width="2.5" />
+                <circle cx="19" cy="12" r="4" fill="#7ed321" stroke-width="2.5" />
+              }
               @case ('palmera') {
                 <circle cx="24" cy="-24" r="9" fill="#ffd400" stroke-width="3" />
                 <path d="M6 34 Q0 10 -2 -10" fill="none" stroke="#8d5a2b" stroke-width="8" />
