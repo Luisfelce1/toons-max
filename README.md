@@ -115,6 +115,19 @@ directos y clips) y verifica que cada video sea del propio canal:
 | Oggy y las cucarachas (1998) | "Oggy y las cucarachas" (Xilam) | Sin diálogos |
 | Barbapapá | `@Barbapapa-CanalOficial` | Español |
 
+### Canales oficiales con varias series (`youtube-multi`)
+
+Algunos canales oficiales mezclan varias series. `ingesta:videos` reparte cada video en su
+serie segun el titulo (`series[].patron` en `api/src/ingesta.js`, palabras separadas por `|`,
+`*` = el resto del canal) y crea una seccion por serie. Al terminar muestra ejemplos de titulos
+que no encajan en ninguna serie, para ampliar los patrones.
+
+| Canal oficial | Series que se separan |
+|---|---|
+| Treehouse Direct (Nelvana/Corus) `@treehousedirectlatam` | Franklin, Pequeño Oso, Max y Ruby, Babar, Caillou, Rolie Polie Olie, La señorita Araña, Corduroy |
+| Power Rangers para Niños – Canal Oficial (Hasbro) `@powerrangersninosoficial` | Una seccion por temporada (Mighty Morphin … Operación Sobrecarga, Dino Charge) y "otras temporadas" |
+| El Autobús Mágico en Español (Scholastic) `@elautobusmagicoenespanol` | El autobús mágico (1994) y El autobús mágico vuelve a despegar (2017) |
+
 ### Canal "Clásicos" (dominio publico, 1950+)
 
 Cortos de Famous Studios que Wikipedia marca como **dominio publico en EE. UU.** (copyright no

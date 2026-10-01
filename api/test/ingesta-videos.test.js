@@ -8,6 +8,7 @@ import {
   runIngestaVideos,
   duracionISO,
   seleccionarEpisodiosCanal,
+  repartirPorSerie,
 } from '../src/ingesta-videos.js';
 
 const ep = (id, temporada, numero, titulo) => ({ id, temporada, numero, titulo });
@@ -159,5 +160,83 @@ describe('resolverCanalOficial por channelId', () => {
     );
     await resolverCanalOficial({ channelId: 'UCX' }, { apiKey: 'k', fetchImpl });
     expect(fetchImpl.mock.calls[0][0]).toContain('id=UCX');
+  });
+});
+
+describe('repartirPorSerie', () => {
+  const v = (id, titulo) => ({ id, titulo, segundos: 600, publicado: id });
+  const subseries = [
+    { nombre: 'Franklin', patron: 'franklin' },
+    { nombre: 'Pequeno Oso', patron: 'pequeno oso|little bear' },
+    { nombre: 'Max y Ruby', patron: 'max y ruby' },
+  ];
+
+  it('agrupa los videos de un canal mixto en su serie', () => {
+    const videos = [
+      v('a', 'Franklin y el día de campo | Episodio completo'),
+      v('b', 'Pequeño Oso - La luna | Treehouse'),
+      v('c', 'FRANKLIN: Franklin va a la escuela'),
+      v('d', 'Max y Ruby: El pastel'),
+      v('e', 'Little Bear - Full Episode'),
+      v('f', 'Compilación de canciones'),
+    ];
+    const { porSerie, sinClasificar } = repartirPorSerie(videos, subseries);
+    expect(porSerie.get('Franklin').map((x) => x.id)).toEqual(['a', 'c']);
+    expect(porSerie.get('Pequeno Oso').map((x) => x.id)).toEqual(['b', 'e']);
+    expect(porSerie.get('Max y Ruby').map((x) => x.id)).toEqual(['d']);
+    expect(sinClasificar.map((x) => x.id)).toEqual(['f']);
+  });
+
+  it('no confunde palabras parciales', () => {
+    const { porSerie } = repartirPorSerie([v('a', 'Frankliniano especial')], subseries);
+    expect(porSerie.get('Franklin')).toEqual([]);
+  });
+
+  it('la primera regla gana y * recoge el resto', () => {
+    const subs = [
+      { nombre: 'Despegar', patron: 'vuelve a despegar' },
+      { nombre: 'Clasico', patron: '*' },
+    ];
+    const { porSerie, sinClasificar } = repartirPorSerie(
+      [v('a', 'El autobús mágico vuelve a despegar: Capítulo 1'), v('b', 'El autobús mágico: Sistema solar')],
+      subs,
+    );
+    expect(porSerie.get('Despegar').map((x) => x.id)).toEqual(['a']);
+    expect(porSerie.get('Clasico').map((x) => x.id)).toEqual(['b']);
+    expect(sinClasificar).toEqual([]);
+  });
+});
+
+describe('canal multiserie de punta a punta (API simulada)', () => {
+  it('solo reparte videos subidos por el propio canal oficial', async () => {
+    const respuestas = {
+      channels: { items: [{ id: 'UCT', contentDetails: { relatedPlaylists: { uploads: 'UUT' } } }] },
+      playlistItems: {
+        items: [
+          { snippet: { title: 'Franklin y el día de campo', videoOwnerChannelId: 'UCT', resourceId: { videoId: 'aaaaaaaaaaa' }, publishedAt: '2020-01-01' } },
+          { snippet: { title: 'Pequeño Oso - La luna', videoOwnerChannelId: 'UCT', resourceId: { videoId: 'bbbbbbbbbbb' }, publishedAt: '2020-01-02' } },
+          { snippet: { title: 'Franklin: resubido', videoOwnerChannelId: 'UCOTRO', resourceId: { videoId: 'ccccccccccc' }, publishedAt: '2020-01-03' } },
+        ],
+      },
+      videos: {
+        items: [
+          { id: 'aaaaaaaaaaa', contentDetails: { duration: 'PT11M' } },
+          { id: 'bbbbbbbbbbb', contentDetails: { duration: 'PT12M' } },
+        ],
+      },
+    };
+    const fetchImpl = vi.fn().mockImplementation(async (url) => {
+      const clave = Object.keys(respuestas).find((k) => String(url).includes(`/${k}?`));
+      return jsonRes(respuestas[clave]);
+    });
+    const canal = await resolverCanalOficial({ handle: '@x' }, { apiKey: 'k', fetchImpl });
+    const videos = await listarVideosOficiales(canal, { apiKey: 'k', fetchImpl });
+    const { porSerie } = repartirPorSerie(videos, [
+      { nombre: 'Franklin', patron: 'franklin' },
+      { nombre: 'Oso', patron: 'pequeno oso' },
+    ]);
+    // El video resubido por otro canal no entra.
+    expect(porSerie.get('Franklin').map((x) => x.id)).toEqual(['aaaaaaaaaaa']);
+    expect(porSerie.get('Oso').map((x) => x.id)).toEqual(['bbbbbbbbbbb']);
   });
 });
